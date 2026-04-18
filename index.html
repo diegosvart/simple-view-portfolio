@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portafolio TI 2026 — Grupo EBI</title>
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+<script defer src="https://unpkg.com/lucide@latest"></script>
+<script defer src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.13);
+    --text: #1a1917;
+    --text-2: #6b6963;
+    --text-3: #9c9a92;
+    --accent: #1a1917;
+    --green: #1D9E75;
+    --green-bg: #e1f5ee;
+    --green-text: #085041;
+    --amber: #BA7517;
+    --amber-bg: #faeeda;
+    --amber-text: #633806;
+    --red: #E24B4A;
+    --red-bg: #fcebeb;
+    --red-text: #791f1f;
+    --purple: #534AB7;
+    --purple-bg: #eeedfe;
+    --shadow-sm: 0 10px 24px rgba(10, 10, 10, 0.05);
+    --metric-completado: var(--green);
+    --metric-en-curso: var(--amber);
+    --metric-bloqueado: var(--red);
+    --accent-fg: #ffffff;
+    --tooltip-bg: #1a1917;
+    --tooltip-text: #ffffff;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f1217;
+    --surface: #171c24;
+    --surface2: #1f2630;
+    --border: rgba(203, 220, 255, 0.12);
+    --border-md: rgba(203, 220, 255, 0.24);
+    --text: #edf2ff;
+    --text-2: #b3c0d8;
+    --text-3: #7f90ae;
+    --accent: #d8e2f8;
+    --green: #37c697;
+    --green-bg: rgba(55, 198, 151, 0.16);
+    --green-text: #9ef4d8;
+    --amber: #e4af4b;
+    --amber-bg: rgba(228, 175, 75, 0.16);
+    --amber-text: #ffd595;
+    --red: #ea7676;
+    --red-bg: rgba(234, 118, 118, 0.15);
+    --red-text: #ffc3c3;
+    --purple: #9391ff;
+    --purple-bg: rgba(147, 145, 255, 0.14);
+    --shadow-sm: 0 14px 28px rgba(0, 0, 0, 0.35);
+    --accent-fg: #0f1217;
+    --tooltip-bg: #e8eef8;
+    --tooltip-text: #0f1217;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    position: relative;
+    transition: background .25s ease, color .25s ease;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(1200px 460px at 10% -5%, rgba(83, 74, 183, 0.16), transparent 60%),
+      radial-gradient(900px 420px at 95% 5%, rgba(29, 158, 117, 0.14), transparent 58%);
+    z-index: -1;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 76px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: background .25s ease, border-color .25s ease;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-mark {
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg { width: 20px; height: 20px; }
+
+  .header-titles {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border-md);
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .header-sub {
+    font-size: 14px;
+    color: var(--text-2);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .last-update {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  .btn-outline {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 400;
+    padding: 5px 12px;
+    border: 1px solid var(--border-md);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .btn-outline:hover { background: var(--surface2); color: var(--text); }
+
+  .btn-theme {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-theme i {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+  }
+
+  .theme-icon-light { display: none; }
+  .theme-icon-dark { display: inline-flex; }
+  :root[data-theme="dark"] .theme-icon-light { display: inline-flex; }
+  :root[data-theme="dark"] .theme-icon-dark { display: none; }
+
+  main { padding: 1.5rem 2rem 3rem; max-width: 1440px; margin: 0 auto; }
+
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    gap: 10px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .2s ease, transform .15s ease;
+  }
+
+  .metric-card:hover { transform: translateY(-1px); }
+
+  .metric-val {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 0;
+  }
+
+  .metric-lbl {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  .metric-kpi--total .metric-val { color: var(--text); }
+  .metric-kpi--completado .metric-val { color: var(--metric-completado); }
+  .metric-kpi--curso .metric-val { color: var(--metric-en-curso); }
+  .metric-kpi--bloqueado .metric-val { color: var(--metric-bloqueado); }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .section-label {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    line-height: 1;
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 4px;
+  }
+
+  .filter-pill {
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border-md);
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .filter-pill.active {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .table-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .table-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .table-scroll::-webkit-scrollbar-thumb {
+    background: var(--border-md);
+    border-radius: 999px;
+  }
+
+  .table-head {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .thead-proj {
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-right: 1px solid var(--border);
+  }
+
+  .thead-phases {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .phase-col-head {
+    padding: 10px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-right: 1px solid var(--border);
+  }
+
+  .phase-col-head:last-child { border-right: none; }
+
+  .proj-row {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+
+  .proj-row:last-child { border-bottom: none; }
+  .proj-row:hover { background: var(--surface2); }
+  .proj-row.hidden { display: none; }
+
+  .proj-info {
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .proj-name-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .proj-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .rag-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .rag-verde { background: var(--green); }
+  .rag-ambar { background: var(--amber); }
+  .rag-rojo  { background: var(--red); }
+
+  .proj-desc {
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 300;
+  }
+
+  .proj-resp {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 1px;
+  }
+
+  .phases-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .phase-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 8px;
+    border-right: 1px solid var(--border);
+  }
+
+  .phase-cell:last-child { border-right: none; }
+
+  .stage-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .stage-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--mono);
+    cursor: default;
+    flex-shrink: 0;
+    transition: transform .15s;
+  }
+
+  .stage-dot:hover { transform: scale(1.1); }
+
+  .stage-dot.completado {
+    background: var(--green);
+    color: #fff;
+  }
+
+  .stage-dot.en-curso {
+    background: var(--amber-bg);
+    color: var(--amber-text);
+    box-shadow: 0 0 0 3px rgba(186,117,23,0.18);
+    font-weight: 500;
+  }
+
+  .stage-dot.pendiente {
+    background: var(--surface2);
+    color: var(--text-3);
+    border: 1px solid var(--border-md);
+  }
+
+  .stage-dot.bloqueado {
+    background: var(--red-bg);
+    color: var(--red-text);
+    border: 1px solid rgba(226,75,74,0.3);
+  }
+
+  .stage-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--tooltip-bg);
+    color: var(--tooltip-text);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+    padding: 6px 11px;
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 9999;
+    line-height: 1.4;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  .stage-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--tooltip-bg);
+  }
+
+  .stage-wrap:hover .stage-tooltip { display: block; }
+
+  .legend-strip {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .leg-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+
+  .rag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .rag-badge.verde { background: var(--green-bg); color: var(--green-text); }
+  .rag-badge.ambar { background: var(--amber-bg); color: var(--amber-text); }
+  .rag-badge.rojo  { background: var(--red-bg);   color: var(--red-text); }
+
+  .timeline-section {
+    margin-top: 2rem;
+  }
+
+  .timeline-title {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    margin-bottom: 1rem;
+  }
+
+  .timeline-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    overflow-x: auto;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .timeline-track {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    min-width: 700px;
+    padding-top: 10px;
+  }
+
+  .timeline-line {
+    position: absolute;
+    top: 29px;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: var(--border-md);
+    z-index: 0;
+  }
+
+  .tl-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tl-node {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-family: var(--mono);
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 2px solid var(--border-md);
+    background: var(--surface);
+    color: var(--text-2);
+  }
+
+  .tl-node.fase-1 { background: #eeedfe; color: #534AB7; border-color: #AFA9EC; }
+  .tl-node.fase-2 { background: #e1f5ee; color: #085041; border-color: #5DCAA5; }
+  .tl-node.fase-3 { background: #faeeda; color: #633806; border-color: #EF9F27; }
+  .tl-node.fase-4 { background: #f1efe8; color: #2C2C2A; border-color: #888780; }
+
+  .tl-label {
+    text-align: center;
+    max-width: 100px;
+  }
+
+  .tl-num {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-3);
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .tl-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .tl-desc {
+    font-size: 10px;
+    color: var(--text-3);
+    line-height: 1.3;
+    font-weight: 300;
+  }
+
+  .phase-band {
+    display: flex;
+    gap: 0;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    min-width: 700px;
+  }
+
+  .phase-band-seg {
+    padding: 6px 0;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .pbs-1 { flex: 2; background: #eeedfe; color: #534AB7; }
+  .pbs-2 { flex: 3; background: #e1f5ee; color: #085041; }
+  .pbs-3 { flex: 4; background: #faeeda; color: #633806; }
+  .pbs-4 { flex: 1; background: #f1efe8; color: #5F5E5A; }
+
+  /* Dark mode: timeline node + band colors */
+  :root[data-theme="dark"] .tl-node.fase-1 { background: #221a4a; color: #c4b8ff; border-color: #6e60d8; }
+  :root[data-theme="dark"] .tl-node.fase-2 { background: #0c2a1e; color: #5dffc0; border-color: #1d9e6a; }
+  :root[data-theme="dark"] .tl-node.fase-3 { background: #2e1e00; color: #ffcc4d; border-color: #b07c00; }
+  :root[data-theme="dark"] .tl-node.fase-4 { background: #1c1e26; color: #b0c0d8; border-color: #4a5268; }
+  :root[data-theme="dark"] .pbs-1 { background: #221a4a; color: #c4b8ff; }
+  :root[data-theme="dark"] .pbs-2 { background: #0c2a1e; color: #5dffc0; }
+  :root[data-theme="dark"] .pbs-3 { background: #2e1e00; color: #ffcc4d; }
+  :root[data-theme="dark"] .pbs-4 { background: #1c1e26; color: #b0c0d8; }
+
+  .error-banner {
+    background: var(--red-bg);
+    border: 1px solid rgba(226,75,74,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--red-text);
+    margin-bottom: 1rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2rem;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .source-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-2);
+  }
+
+  @media (max-width: 920px) {
+    .metrics-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .table-head,
+    .proj-row {
+      grid-template-columns: 230px 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    header {
+      padding: 0 1rem;
+    }
+
+    main {
+      padding: 1rem;
+    }
+
+    .metrics-row {
+      grid-template-columns: 1fr;
+    }
+
+    .table-head,
+    .proj-row {
+      grid-template-columns: 180px 1fr;
+    }
+
+    .timeline-wrap {
+      padding: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="5" height="5" rx="1" fill="white"/>
+        <rect x="8" y="1" width="5" height="5" rx="1" fill="white" opacity=".6"/>
+        <rect x="1" y="8" width="5" height="5" rx="1" fill="white" opacity=".6"/>
+        <rect x="8" y="8" width="5" height="5" rx="1" fill="white" opacity=".3"/>
+      </svg>
+    </div>
+    <div class="header-titles">
+      <span class="header-title">Portafolio TI 2026</span>
+      <div class="header-divider"></div>
+      <span class="header-sub">Grupo EBI — Gerencia de Tecnología</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn-outline btn-theme" id="theme-toggle" type="button">
+      <i class="theme-icon-light" data-lucide="sun"></i>
+      <i class="theme-icon-dark" data-lucide="moon-star"></i>
+      <span id="theme-toggle-label">Modo oscuro</span>
+    </button>
+    <span class="last-update" id="last-update">Cargando…</span>
+    <button class="btn-outline" onclick="location.reload()">Actualizar</button>
+  </div>
+</header>
+
+<main>
+  <div id="error-area"></div>
+
+  <div class="metrics-row" id="metrics-row" data-aos="fade-up" data-aos-duration="500">
+    <div class="metric-card metric-kpi--total"><div class="metric-lbl">Proyectos activos</div><div class="metric-val" id="m-total">—</div></div>
+    <div class="metric-card metric-kpi--completado"><div class="metric-lbl">Completado</div><div class="metric-val" id="m-completado">—</div></div>
+    <div class="metric-card metric-kpi--curso"><div class="metric-lbl">En curso</div><div class="metric-val" id="m-encurso">—</div></div>
+    <div class="metric-card metric-kpi--bloqueado"><div class="metric-lbl">Bloqueado</div><div class="metric-val" id="m-bloqueado">—</div></div>
+  </div>
+
+  <div class="controls-row">
+    <span class="section-label">Estado de avance por proyecto</span>
+    <div class="filter-group">
+      <button class="filter-pill active" onclick="applyFilter('todos',this)">Todos</button>
+      <button class="filter-pill" onclick="applyFilter('verde',this)">Verde</button>
+      <button class="filter-pill" onclick="applyFilter('ambar',this)">Ámbar</button>
+      <button class="filter-pill" onclick="applyFilter('rojo',this)">Rojo</button>
+    </div>
+  </div>
+
+  <div class="table-wrap" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
+    <div class="table-scroll">
+      <div class="table-head">
+        <div class="thead-proj">Proyecto</div>
+        <div class="thead-phases">
+          <div class="phase-col-head">Definición</div>
+          <div class="phase-col-head">Diseño</div>
+          <div class="phase-col-head">Ejecución</div>
+          <div class="phase-col-head">Cierre</div>
+        </div>
+      </div>
+      <div id="proj-rows"></div>
+    </div>
+    <div class="legend-strip">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div> Completado</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div> En curso</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#e0deda;border:1px solid #c8c6bf"></div> Pendiente</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--red-bg);border:1px solid rgba(226,75,74,.3)"></div> Bloqueado</div>
+
+    </div>
+  </div>
+
+  <div class="timeline-section" data-aos="fade-up" data-aos-delay="120" data-aos-duration="500">
+    <div class="timeline-title">Ciclo de vida del proyecto — glosario de etapas</div>
+    <div class="timeline-wrap">
+      <div class="phase-band">
+        <div class="phase-band-seg pbs-1">Fase 1 — Definición</div>
+        <div class="phase-band-seg pbs-2">Fase 2 — Diseño</div>
+        <div class="phase-band-seg pbs-3">Fase 3 — Ejecución</div>
+        <div class="phase-band-seg pbs-4">Fase 4 — Cierre</div>
+      </div>
+      <div class="timeline-track">
+        <div class="timeline-line"></div>
+        <div class="tl-step">
+          <div class="tl-node fase-1">E1</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 1</span>
+            <div class="tl-name">Ficha de Proyecto</div>
+            <div class="tl-desc">Objetivo, alcance, sponsor y líder</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-1">E2</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 2</span>
+            <div class="tl-name">Aprobación de Sponsor</div>
+            <div class="tl-desc">Gateway de viabilidad y patrocinio</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-2">E3</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 3</span>
+            <div class="tl-name">Requerimientos Funcionales</div>
+            <div class="tl-desc">Situación actual, brechas y flujos</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-2">E4</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 4</span>
+            <div class="tl-name">Requerimientos Técnicos</div>
+            <div class="tl-desc">Diseño técnico y planificación</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-2">E5</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 5</span>
+            <div class="tl-name">Cotización y Proveedor</div>
+            <div class="tl-desc">Envío de ERT, evaluación, asignación</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E6</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 6</span>
+            <div class="tl-name">Kick Off</div>
+            <div class="tl-desc">Presentación de plan y roles</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E7</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 7</span>
+            <div class="tl-name">Iteración y Seguimiento</div>
+            <div class="tl-desc">Ejecución semanal y control RAG</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E8</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 8</span>
+            <div class="tl-name">Pruebas</div>
+            <div class="tl-desc">Validación funcional y técnica</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E9</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 9</span>
+            <div class="tl-name">Marcha Blanca</div>
+            <div class="tl-desc">Operación paralela supervisada</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-4">E10</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 10</span>
+            <div class="tl-name">Entrega y Cierre Formal</div>
+            <div class="tl-desc">Roll out, acta y lecciones aprendidas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>Portafolio TI — Grupo EBI &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; Project Manager — Diego Morales C.</span>
+  <span class="source-pill">📄 proyectos.md</span>
+</footer>
+
+<script>
+const THEME_KEY = 'pm-report-theme';
+
+const STAGE_LABELS = {
+  e1:  'Etapa 1 — Ficha de Proyecto',
+  e2:  'Etapa 2 — Aprobación de Sponsor',
+  e3:  'Etapa 3 — Requerimientos Funcionales',
+  e4:  'Etapa 4 — Requerimientos Técnicos',
+  e5:  'Etapa 5 — Cotización y Proveedor',
+  e6:  'Etapa 6 — Kick Off',
+  e7:  'Etapa 7 — Iteración y Seguimiento',
+  e8:  'Etapa 8 — Pruebas',
+  e9:  'Etapa 9 — Marcha Blanca',
+  e10: 'Etapa 10 — Entrega y Cierre Formal'
+};
+
+const PHASE_STAGES = [['e1','e2'], ['e3','e4','e5'], ['e6','e7','e8','e9'], ['e10']];
+
+function setTheme(theme) {
+  const nextTheme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  localStorage.setItem(THEME_KEY, nextTheme);
+  document.getElementById('theme-toggle-label').textContent = nextTheme === 'dark' ? 'Modo claro' : 'Modo oscuro';
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+  setTheme(savedTheme);
+  const toggle = document.getElementById('theme-toggle');
+  toggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  });
+}
+
+function parseMD(text) {
+  const projects = [];
+  const blocks = text.split(/^## proyecto:/m).slice(1);
+  blocks.forEach(block => {
+    const lines = block.trim().split('\n');
+    const name = lines[0].trim();
+    const proj = { name };
+    lines.slice(1).forEach(line => {
+      const m = line.match(/^(\w+):\s*(.+)/);
+      if (m) proj[m[1].trim().toLowerCase()] = m[2].trim();
+    });
+    if (name) projects.push(proj);
+  });
+  return projects;
+}
+
+function stageHTML(key, state) {
+  const label = STAGE_LABELS[key] || key;
+  const stateLabel = {
+    completado: 'Completado',
+    'en-curso': 'En curso',
+    pendiente: 'Pendiente',
+    bloqueado: 'Bloqueado'
+  }[state] || state;
+  const num = key.replace('e','');
+  return `
+    <div class="stage-wrap">
+      <div class="stage-dot ${state}">${num}</div>
+      <div class="stage-tooltip"><strong>${label}</strong><br>${stateLabel}</div>
+    </div>`;
+}
+
+function renderProjects(projects) {
+  const container = document.getElementById('proj-rows');
+  container.innerHTML = '';
+
+  let completado = 0, enCurso = 0, bloqueado = 0;
+  projects.forEach(p => {
+    const states = Object.keys(STAGE_LABELS).map(k => (p[k] || 'pendiente').toLowerCase());
+    if (states.some(s => s === 'bloqueado')) {
+      bloqueado++;
+    } else if (states.every(s => s === 'completado')) {
+      completado++;
+    } else {
+      enCurso++;
+    }
+  });
+  document.getElementById('m-total').textContent = projects.length;
+  document.getElementById('m-completado').textContent = completado;
+  document.getElementById('m-encurso').textContent = enCurso;
+  document.getElementById('m-bloqueado').textContent = bloqueado;
+
+  projects.forEach(proj => {
+    const row = document.createElement('div');
+    row.className = 'proj-row';
+    row.dataset.rag = proj.rag || 'verde';
+
+    const phasesHTML = PHASE_STAGES.map(keys =>
+      `<div class="phase-cell">${keys.map(k => stageHTML(k, proj[k] || 'pendiente')).join('')}</div>`
+    ).join('');
+
+    row.innerHTML = `
+      <div class="proj-info">
+        <div class="proj-name-row">
+          <div class="rag-dot rag-${proj.rag || 'verde'}"></div>
+          <span class="proj-name">${proj.name}</span>
+        </div>
+        <div class="proj-resp">${proj.responsable || ''}</div>
+      </div>
+      <div class="phases-grid">${phasesHTML}</div>`;
+    container.appendChild(row);
+  });
+}
+
+function applyFilter(rag, btn) {
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.proj-row').forEach(row => {
+    row.classList.toggle('hidden', rag !== 'todos' && row.dataset.rag !== rag);
+  });
+}
+
+async function loadData() {
+  try {
+    const resp = await fetch('proyectos.md?_=' + Date.now());
+    if (!resp.ok) throw new Error('No se pudo cargar proyectos.md (HTTP ' + resp.status + ')');
+    const text = await resp.text();
+    const projects = parseMD(text);
+    if (!projects.length) throw new Error('No se encontraron proyectos en proyectos.md');
+    renderProjects(projects);
+
+    const now = new Date();
+    document.getElementById('last-update').textContent =
+      'Actualizado ' + now.toLocaleDateString('es-CL', {day:'numeric', month:'short'}) +
+      ' ' + now.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
+  } catch(e) {
+    document.getElementById('error-area').innerHTML =
+      `<div class="error-banner">No se pudo cargar el archivo de datos: ${e.message}. Asegúrate de abrir index.html desde un servidor local.</div>`;
+  }
+}
+
+initTheme();
+loadData();
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.AOS) {
+    AOS.init({ duration: 500, once: true, easing: 'ease-out-cubic' });
+  }
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+});
+</script>
+</body>
+</html>
