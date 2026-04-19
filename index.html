@@ -210,8 +210,11 @@
   }
 
   .metric-card {
-    background: var(--surface);
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--border-md);
     border-radius: 10px;
     padding: 10px 12px;
     display: flex;
@@ -220,7 +223,7 @@
     min-height: 56px;
     gap: 10px;
     box-shadow: var(--shadow-sm);
-    transition: border-color .2s ease, transform .15s ease;
+    transition: border-color .2s ease, transform .15s ease, box-shadow .2s ease;
   }
 
   .metric-card:hover { transform: translateY(-1px); }
@@ -245,6 +248,11 @@
   .metric-kpi--completado .metric-val { color: var(--metric-completado); }
   .metric-kpi--curso .metric-val { color: var(--metric-en-curso); }
   .metric-kpi--bloqueado .metric-val { color: var(--metric-bloqueado); }
+
+  .metric-kpi--total     { border-left-color: var(--border-md); }
+  .metric-kpi--completado { border-left-color: var(--green); box-shadow: var(--shadow-sm), 0 0 0 1px rgba(29,158,117,0.15); }
+  .metric-kpi--curso      { border-left-color: var(--amber); box-shadow: var(--shadow-sm), 0 0 0 1px rgba(186,117,23,0.15); }
+  .metric-kpi--bloqueado  { border-left-color: var(--red);   box-shadow: var(--shadow-sm), 0 0 0 1px rgba(226,75,74,0.15); }
 
   .controls-row {
     display: flex;
@@ -487,7 +495,7 @@
   }
 
   .proj-row:last-child { border-bottom: none; }
-  .proj-row:hover { background: var(--surface2); }
+  .proj-row:hover { background: var(--surface2); cursor: pointer; }
   .proj-row.hidden { display: none; }
 
   .proj-info {
@@ -797,6 +805,7 @@
   :root[data-theme="dark"] .pbs-2 { background: #0c2a1e; color: #5dffc0; }
   :root[data-theme="dark"] .pbs-3 { background: #2e1e00; color: #ffcc4d; }
   :root[data-theme="dark"] .pbs-4 { background: #1c1e26; color: #b0c0d8; }
+  :root[data-theme="dark"] .metric-card { background: rgba(23,28,36,0.72); }
 
   .error-banner {
     background: var(--red-bg);
@@ -836,6 +845,116 @@
     font-family: var(--mono);
     font-size: 11px;
     color: var(--text-2);
+  }
+
+  /* ===== Semantic colored buttons ===== */
+  .btn-green, .btn-red, .btn-amber {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-green  { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-green:hover  { filter: brightness(1.12); }
+  .btn-red    { background: var(--red);   color: #fff; border-color: var(--red); }
+  .btn-red:hover    { filter: brightness(1.12); }
+  .btn-amber  { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .btn-amber:hover  { filter: brightness(1.12); }
+
+  /* ===== Maintainer close (×) button ===== */
+  .btn-icon-close {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-md);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .btn-icon-close:hover { background: var(--red-bg); color: var(--red-text); border-color: rgba(226,75,74,0.3); }
+
+  /* ===== Save success inline dialog ===== */
+  .save-success-dialog {
+    background: var(--green-bg);
+    border: 1px solid rgba(29,158,117,0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    animation: slideDown .25s ease;
+  }
+  .save-success-dialog.hidden { display: none; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .save-success-icon {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .save-success-msg {
+    flex: 1; min-width: 140px;
+    font-size: 13px;
+    color: var(--green-text);
+    font-weight: 500;
+  }
+  .save-success-actions { display: flex; gap: 8px; }
+
+  /* ===== Loading screen ===== */
+  #loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    transition: opacity .4s ease;
+  }
+  #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+  .loader-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .loader-spinner {
+    width: 52px; height: 52px;
+    border: 3px solid var(--border-md);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: loaderSpin .75s linear infinite;
+  }
+  @keyframes loaderSpin { to { transform: rotate(360deg); } }
+  .loader-brand {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--text);
+  }
+  .loader-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--mono);
+    margin-top: -8px;
   }
 
   @media (max-width: 920px) {
@@ -884,6 +1003,14 @@
 </head>
 <body>
 
+<div id="loading-screen">
+  <div class="loader-inner">
+    <div class="loader-spinner"></div>
+    <div class="loader-brand">Portafolio TI 2026</div>
+    <div class="loader-sub">Cargando datos del portafolio…</div>
+  </div>
+</div>
+
 <header>
   <div class="header-left">
     <div class="logo-mark">
@@ -926,9 +1053,9 @@
     <div class="controls-right">
       <div class="filter-group">
         <button class="filter-pill active" data-rag="todos">Todos</button>
-        <button class="filter-pill" data-rag="verde">Verde</button>
-        <button class="filter-pill" data-rag="ambar">Ámbar</button>
-        <button class="filter-pill" data-rag="rojo">Rojo</button>
+        <button class="filter-pill" data-rag="verde">Al día</button>
+        <button class="filter-pill" data-rag="ambar">En riesgo</button>
+        <button class="filter-pill" data-rag="rojo">Crítico</button>
       </div>
       <button class="btn-outline" id="maintainer-toggle" type="button">Mantenedor proyectos</button>
     </div>
@@ -938,11 +1065,12 @@
     <div class="maintainer-head">
       <div>
         <h3>Mantenedor de proyectos</h3>
-        <p>Modo genérico: persistencia local del navegador.</p>
+        <p>Modo genérico: persistencia local del navegador. Doble clic en la tabla para abrir.</p>
       </div>
       <div class="maintainer-actions">
-        <button class="btn-outline" id="mp-new" type="button">Nuevo</button>
-        <button class="btn-outline" id="mp-delete" type="button">Eliminar</button>
+        <button class="btn-green" id="mp-new" type="button">Nuevo</button>
+        <button class="btn-red" id="mp-delete" type="button">Eliminar</button>
+        <button class="btn-icon-close" id="mp-close" type="button" title="Cerrar mantenedor">×</button>
       </div>
     </div>
 
@@ -975,13 +1103,23 @@
 
     <div class="stage-editor-grid" id="stage-editor-grid"></div>
 
+    <div id="save-success-dialog" class="save-success-dialog hidden">
+      <div class="save-success-icon">✓</div>
+      <div class="save-success-msg">Proyecto guardado correctamente.</div>
+      <div class="save-success-actions">
+        <button class="btn-outline" id="mp-success-continue" type="button">Seguir editando</button>
+        <button class="btn-outline" id="mp-success-exit" type="button">Salir</button>
+      </div>
+    </div>
+
     <div class="maintainer-footer">
       <span id="maintainer-status">Sin cambios</span>
       <div class="maintainer-actions">
         <button class="btn-outline" id="mp-export" type="button">Exportar .md</button>
-        <button class="btn-outline" id="mp-reset" type="button">Volver a proyectos.md</button>
+        <button class="btn-amber" id="mp-reset" type="button">Volver a proyectos.md</button>
+        <button class="btn-outline" id="mp-form-reset" type="button">Limpiar</button>
         <button class="btn-outline" id="mp-cancel" type="button">Cancelar</button>
-        <button class="btn-outline primary" id="mp-save" type="button">Guardar</button>
+        <button class="btn-green" id="mp-save" type="button">Guardar</button>
       </div>
     </div>
   </section>
@@ -1249,10 +1387,11 @@ function renderProjects(projects) {
   document.getElementById('m-encurso').textContent = enCurso;
   document.getElementById('m-bloqueado').textContent = bloqueado;
 
-  currentProjects.forEach(proj => {
+  currentProjects.forEach((proj, idx) => {
     const row = document.createElement('div');
     row.className = 'proj-row';
     row.dataset.rag = normalizeRag(proj.rag);
+    row.title = 'Doble clic para editar';
 
     const phasesHTML = PHASE_STAGES.map(keys =>
       `<div class="phase-cell">${keys.map(k => stageHTML(k, normalizeStage(proj[k]))).join('')}</div>`
@@ -1267,6 +1406,7 @@ function renderProjects(projects) {
         <div class="proj-resp">${proj.responsable || ''}</div>
       </div>
       <div class="phases-grid">${phasesHTML}</div>`;
+    row.addEventListener('dblclick', function() { openMaintainer(idx); });
     container.appendChild(row);
   });
   refreshMaintainerSelect();
@@ -1422,11 +1562,30 @@ async function loadData() {
   }
 }
 
+function openMaintainer(idx) {
+  var panel = document.getElementById('maintainer-panel');
+  if (panel) panel.classList.remove('hidden');
+  renderStageEditor();
+  selectedProjectIndex = (typeof idx === 'number') ? idx : -1;
+  refreshMaintainerSelect();
+  var msg = (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length)
+    ? 'Editando: ' + currentProjects[selectedProjectIndex].name
+    : 'Nuevo proyecto listo para crear.';
+  setMaintainerStatus(msg, false);
+}
+
 function setupMaintainerEvents() {
   const toggle = document.getElementById('maintainer-toggle');
   const panel = document.getElementById('maintainer-panel');
   if (toggle && panel) {
     toggle.addEventListener('click', () => panel.classList.toggle('hidden'));
+  }
+
+  const mpClose = document.getElementById('mp-close');
+  if (mpClose) {
+    mpClose.addEventListener('click', () => {
+      document.getElementById('maintainer-panel').classList.add('hidden');
+    });
   }
 
   document.getElementById('mp-project-select').addEventListener('change', (event) => {
@@ -1474,13 +1633,30 @@ function setupMaintainerEvents() {
       next[selectedProjectIndex] = draft;
     } else {
       next.push(draft);
-      selectedProjectIndex = next.length - 1;
     }
 
     saveLocalData(next);
     renderProjects(next);
     applyActiveFilter();
+    selectedProjectIndex = -1;
+    refreshMaintainerSelect();
     setMaintainerStatus('Proyecto guardado en almacenamiento local.', false);
+    document.getElementById('save-success-dialog').classList.remove('hidden');
+  });
+
+  document.getElementById('mp-success-continue').addEventListener('click', () => {
+    document.getElementById('save-success-dialog').classList.add('hidden');
+  });
+
+  document.getElementById('mp-success-exit').addEventListener('click', () => {
+    document.getElementById('save-success-dialog').classList.add('hidden');
+    document.getElementById('maintainer-panel').classList.add('hidden');
+  });
+
+  document.getElementById('mp-form-reset').addEventListener('click', () => {
+    selectedProjectIndex = -1;
+    refreshMaintainerSelect();
+    setMaintainerStatus('Formulario reiniciado.', false);
   });
 
   document.getElementById('mp-delete').addEventListener('click', () => {
@@ -1521,14 +1697,31 @@ function setupGlobalEvents() {
   });
 
   document.getElementById('refresh-btn').addEventListener('click', () => loadData());
+
+  const tableHead = document.querySelector('.table-head');
+  if (tableHead) {
+    tableHead.addEventListener('dblclick', () => openMaintainer(-1));
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  const loadStart = Date.now();
+  function hideLoader() {
+    const screen = document.getElementById('loading-screen');
+    if (!screen) return;
+    const elapsed = Date.now() - loadStart;
+    const delay = Math.max(0, 1000 - elapsed);
+    setTimeout(function() {
+      screen.classList.add('fade-out');
+      setTimeout(function() { screen.style.display = 'none'; }, 420);
+    }, delay);
+  }
+
   initTheme();
   renderStageEditor();
   setupGlobalEvents();
   setupMaintainerEvents();
-  loadData();
+  loadData().finally(hideLoader);
 
   if (window.AOS) {
     AOS.init({ duration: 500, once: true, easing: 'ease-out-cubic' });
