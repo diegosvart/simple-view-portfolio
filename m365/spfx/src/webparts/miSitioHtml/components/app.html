@@ -38,13 +38,66 @@
 
   <div class="controls-row">
     <span class="section-label">Estado de avance por proyecto</span>
-    <div class="filter-group">
-      <button class="filter-pill active" data-rag="todos">Todos</button>
-      <button class="filter-pill" data-rag="verde">Verde</button>
-      <button class="filter-pill" data-rag="ambar">Ámbar</button>
-      <button class="filter-pill" data-rag="rojo">Rojo</button>
+    <div class="controls-right">
+      <div class="filter-group">
+        <button class="filter-pill active" data-rag="todos">Todos</button>
+        <button class="filter-pill" data-rag="verde">Verde</button>
+        <button class="filter-pill" data-rag="ambar">Ámbar</button>
+        <button class="filter-pill" data-rag="rojo">Rojo</button>
+      </div>
+      <button class="btn-outline" id="maintainer-toggle" type="button">Mantenedor proyectos</button>
     </div>
   </div>
+
+  <section class="maintainer-panel hidden" id="maintainer-panel">
+    <div class="maintainer-head">
+      <div>
+        <h3>Mantenedor de proyectos</h3>
+        <p>Origen remoto: <span id="remote-path-label">-</span></p>
+      </div>
+      <div class="maintainer-actions">
+        <button class="btn-outline" id="mp-new" type="button">Nuevo</button>
+        <button class="btn-outline" id="mp-delete" type="button">Eliminar</button>
+      </div>
+    </div>
+
+    <div class="maintainer-grid">
+      <label class="field-row">
+        <span>Proyecto</span>
+        <select id="mp-project-select"></select>
+      </label>
+      <label class="field-row">
+        <span>Nombre</span>
+        <input id="mp-name" type="text" maxlength="120" placeholder="Nombre del proyecto" />
+      </label>
+      <label class="field-row field-col-2">
+        <span>Descripción</span>
+        <textarea id="mp-description" rows="2" placeholder="Descripción del proyecto"></textarea>
+      </label>
+      <label class="field-row">
+        <span>Responsable</span>
+        <input id="mp-responsable" type="text" maxlength="80" placeholder="PM" />
+      </label>
+      <label class="field-row">
+        <span>RAG</span>
+        <select id="mp-rag">
+          <option value="verde">Verde</option>
+          <option value="ambar">Ámbar</option>
+          <option value="rojo">Rojo</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="stage-editor-grid" id="stage-editor-grid"></div>
+
+    <div class="maintainer-footer">
+      <span id="maintainer-status">Sin cambios</span>
+      <div class="maintainer-actions">
+        <button class="btn-outline" id="mp-cancel" type="button">Cancelar</button>
+        <button class="btn-outline primary" id="mp-save" type="button">Guardar</button>
+      </div>
+    </div>
+  </section>
 
   <div class="table-wrap" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
     <div class="table-scroll">

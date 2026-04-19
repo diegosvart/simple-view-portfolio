@@ -21,7 +21,10 @@
     "description": { "default": "Migrated static HTML site as SPFx webpart" },
     "officeFabricIconFontName": "Page",
     "properties": {
-      "description": "MiSitioHtml"
+      "description": "MiSitioHtml",
+      "dataSiteUrl": "",
+      "dataFileServerRelativeUrl": "/Shared Documents/proyectos.md",
+      "enableMaintainer": true
     }
   }]
 }
