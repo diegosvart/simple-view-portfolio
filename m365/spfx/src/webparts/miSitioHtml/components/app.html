@@ -1,0 +1,171 @@
+<div class="mi-sitio-wrapper" data-theme="light">
+<header>
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="5" height="5" rx="1" fill="white"/>
+        <rect x="8" y="1" width="5" height="5" rx="1" fill="white" opacity=".6"/>
+        <rect x="1" y="8" width="5" height="5" rx="1" fill="white" opacity=".6"/>
+        <rect x="8" y="8" width="5" height="5" rx="1" fill="white" opacity=".3"/>
+      </svg>
+    </div>
+    <div class="header-titles">
+      <span class="header-title">Portafolio TI 2026</span>
+      <div class="header-divider"></div>
+      <span class="header-sub">Grupo EBI — Gerencia de Tecnología</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn-outline btn-theme" id="theme-toggle" type="button">
+      <i class="theme-icon-light" data-lucide="sun"></i>
+      <i class="theme-icon-dark" data-lucide="moon-star"></i>
+      <span id="theme-toggle-label">Modo oscuro</span>
+    </button>
+    <span class="last-update" id="last-update">Cargando…</span>
+    <button class="btn-outline" id="refresh-btn">Actualizar</button>
+  </div>
+</header>
+
+<main>
+  <div id="error-area"></div>
+
+  <div class="metrics-row" id="metrics-row" data-aos="fade-up" data-aos-duration="500">
+    <div class="metric-card metric-kpi--total"><div class="metric-lbl">Proyectos activos</div><div class="metric-val" id="m-total">—</div></div>
+    <div class="metric-card metric-kpi--completado"><div class="metric-lbl">Completado</div><div class="metric-val" id="m-completado">—</div></div>
+    <div class="metric-card metric-kpi--curso"><div class="metric-lbl">En curso</div><div class="metric-val" id="m-encurso">—</div></div>
+    <div class="metric-card metric-kpi--bloqueado"><div class="metric-lbl">Bloqueado</div><div class="metric-val" id="m-bloqueado">—</div></div>
+  </div>
+
+  <div class="controls-row">
+    <span class="section-label">Estado de avance por proyecto</span>
+    <div class="filter-group">
+      <button class="filter-pill active" data-rag="todos">Todos</button>
+      <button class="filter-pill" data-rag="verde">Verde</button>
+      <button class="filter-pill" data-rag="ambar">Ámbar</button>
+      <button class="filter-pill" data-rag="rojo">Rojo</button>
+    </div>
+  </div>
+
+  <div class="table-wrap" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
+    <div class="table-scroll">
+      <div class="table-head">
+        <div class="thead-proj">Proyecto</div>
+        <div class="thead-phases">
+          <div class="phase-col-head">Definición</div>
+          <div class="phase-col-head">Diseño</div>
+          <div class="phase-col-head">Ejecución</div>
+          <div class="phase-col-head">Cierre</div>
+        </div>
+      </div>
+      <div id="proj-rows"></div>
+    </div>
+    <div class="legend-strip">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div> Completado</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div> En curso</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#e0deda;border:1px solid #c8c6bf"></div> Pendiente</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--red-bg);border:1px solid rgba(226,75,74,.3)"></div> Bloqueado</div>
+
+    </div>
+  </div>
+
+  <div class="timeline-section" data-aos="fade-up" data-aos-delay="120" data-aos-duration="500">
+    <div class="timeline-title">Ciclo de vida del proyecto — glosario de etapas</div>
+    <div class="timeline-wrap">
+      <div class="phase-band">
+        <div class="phase-band-seg pbs-1">Fase 1 — Definición</div>
+        <div class="phase-band-seg pbs-2">Fase 2 — Diseño</div>
+        <div class="phase-band-seg pbs-3">Fase 3 — Ejecución</div>
+        <div class="phase-band-seg pbs-4">Fase 4 — Cierre</div>
+      </div>
+      <div class="timeline-track">
+        <div class="timeline-line"></div>
+        <div class="tl-step">
+          <div class="tl-node fase-1">E1</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 1</span>
+            <div class="tl-name">Ficha de Proyecto</div>
+            <div class="tl-desc">Objetivo, alcance, sponsor y líder</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-1">E2</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 2</span>
+            <div class="tl-name">Aprobación de Sponsor</div>
+            <div class="tl-desc">Gateway de viabilidad y patrocinio</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-2">E3</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 3</span>
+            <div class="tl-name">Requerimientos Funcionales</div>
+            <div class="tl-desc">Situación actual, brechas y flujos</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-2">E4</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 4</span>
+            <div class="tl-name">Requerimientos Técnicos</div>
+            <div class="tl-desc">Diseño técnico y planificación</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-2">E5</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 5</span>
+            <div class="tl-name">Cotización y Proveedor</div>
+            <div class="tl-desc">Envío de ERT, evaluación, asignación</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E6</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 6</span>
+            <div class="tl-name">Kick Off</div>
+            <div class="tl-desc">Presentación de plan y roles</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E7</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 7</span>
+            <div class="tl-name">Iteración y Seguimiento</div>
+            <div class="tl-desc">Ejecución semanal y control RAG</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E8</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 8</span>
+            <div class="tl-name">Pruebas</div>
+            <div class="tl-desc">Validación funcional y técnica</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-3">E9</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 9</span>
+            <div class="tl-name">Marcha Blanca</div>
+            <div class="tl-desc">Operación paralela supervisada</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-node fase-4">E10</div>
+          <div class="tl-label">
+            <span class="tl-num">Etapa 10</span>
+            <div class="tl-name">Entrega y Cierre Formal</div>
+            <div class="tl-desc">Roll out, acta y lecciones aprendidas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>Portafolio TI — Grupo EBI &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; Project Manager — Diego Morales C.</span>
+  <span class="source-pill">proyectos.md</span>
+</footer>
+</div>
