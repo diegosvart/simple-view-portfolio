@@ -255,6 +255,13 @@
     gap: 12px;
   }
 
+  .controls-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
   .section-label {
     font-size: 20px;
     font-weight: 700;
@@ -268,6 +275,124 @@
   .filter-group {
     display: flex;
     gap: 4px;
+  }
+
+  .btn-outline.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .maintainer-panel {
+    margin-bottom: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .maintainer-panel.hidden {
+    display: none;
+  }
+
+  .maintainer-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-head h3 {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .maintainer-head p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  .maintainer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field-col-2 {
+    grid-column: 1 / -1;
+  }
+
+  .field-row span {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 600;
+  }
+
+  .field-row input,
+  .field-row textarea,
+  .field-row select {
+    border: 1px solid var(--border-md);
+    background: var(--surface2);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+
+  .field-row textarea {
+    resize: vertical;
+  }
+
+  .stage-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stage-row span {
+    font-family: var(--mono);
+  }
+
+  .maintainer-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  #maintainer-status {
+    font-size: 12px;
+    color: var(--text-2);
+  }
+
+  #maintainer-status.error {
+    color: var(--red-text);
   }
 
   .filter-pill {
@@ -683,6 +808,12 @@
     margin-bottom: 1rem;
   }
 
+  .error-banner.warning {
+    background: var(--amber-bg);
+    border-color: rgba(186,117,23,0.28);
+    color: var(--amber-text);
+  }
+
   footer {
     border-top: 1px solid var(--border);
     padding: 1.5rem 2rem;
@@ -716,6 +847,10 @@
     .proj-row {
       grid-template-columns: 230px 1fr;
     }
+
+    .stage-editor-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   @media (max-width: 640px) {
@@ -728,6 +863,11 @@
     }
 
     .metrics-row {
+      grid-template-columns: 1fr;
+    }
+
+    .maintainer-grid,
+    .stage-editor-grid {
       grid-template-columns: 1fr;
     }
 
@@ -767,7 +907,7 @@
       <span id="theme-toggle-label">Modo oscuro</span>
     </button>
     <span class="last-update" id="last-update">Cargando…</span>
-    <button class="btn-outline" onclick="location.reload()">Actualizar</button>
+    <button class="btn-outline" id="refresh-btn" type="button">Actualizar</button>
   </div>
 </header>
 
@@ -783,13 +923,68 @@
 
   <div class="controls-row">
     <span class="section-label">Estado de avance por proyecto</span>
-    <div class="filter-group">
-      <button class="filter-pill active" onclick="applyFilter('todos',this)">Todos</button>
-      <button class="filter-pill" onclick="applyFilter('verde',this)">Verde</button>
-      <button class="filter-pill" onclick="applyFilter('ambar',this)">Ámbar</button>
-      <button class="filter-pill" onclick="applyFilter('rojo',this)">Rojo</button>
+    <div class="controls-right">
+      <div class="filter-group">
+        <button class="filter-pill active" data-rag="todos">Todos</button>
+        <button class="filter-pill" data-rag="verde">Verde</button>
+        <button class="filter-pill" data-rag="ambar">Ámbar</button>
+        <button class="filter-pill" data-rag="rojo">Rojo</button>
+      </div>
+      <button class="btn-outline" id="maintainer-toggle" type="button">Mantenedor proyectos</button>
     </div>
   </div>
+
+  <section class="maintainer-panel hidden" id="maintainer-panel">
+    <div class="maintainer-head">
+      <div>
+        <h3>Mantenedor de proyectos</h3>
+        <p>Modo genérico: persistencia local del navegador.</p>
+      </div>
+      <div class="maintainer-actions">
+        <button class="btn-outline" id="mp-new" type="button">Nuevo</button>
+        <button class="btn-outline" id="mp-delete" type="button">Eliminar</button>
+      </div>
+    </div>
+
+    <div class="maintainer-grid">
+      <label class="field-row">
+        <span>Proyecto</span>
+        <select id="mp-project-select"></select>
+      </label>
+      <label class="field-row">
+        <span>Nombre</span>
+        <input id="mp-name" type="text" maxlength="120" placeholder="Nombre del proyecto" />
+      </label>
+      <label class="field-row field-col-2">
+        <span>Descripción</span>
+        <textarea id="mp-description" rows="2" placeholder="Descripción del proyecto"></textarea>
+      </label>
+      <label class="field-row">
+        <span>Responsable</span>
+        <input id="mp-responsable" type="text" maxlength="80" placeholder="PM" />
+      </label>
+      <label class="field-row">
+        <span>RAG</span>
+        <select id="mp-rag">
+          <option value="verde">Verde</option>
+          <option value="ambar">Ámbar</option>
+          <option value="rojo">Rojo</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="stage-editor-grid" id="stage-editor-grid"></div>
+
+    <div class="maintainer-footer">
+      <span id="maintainer-status">Sin cambios</span>
+      <div class="maintainer-actions">
+        <button class="btn-outline" id="mp-export" type="button">Exportar .md</button>
+        <button class="btn-outline" id="mp-reset" type="button">Volver a proyectos.md</button>
+        <button class="btn-outline" id="mp-cancel" type="button">Cancelar</button>
+        <button class="btn-outline primary" id="mp-save" type="button">Guardar</button>
+      </div>
+    </div>
+  </section>
 
   <div class="table-wrap" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
     <div class="table-scroll">
@@ -916,6 +1111,7 @@
 
 <script>
 const THEME_KEY = 'pm-report-theme';
+const DATA_KEY = 'pm-report-projects-markdown';
 
 const STAGE_LABELS = {
   e1:  'Etapa 1 — Ficha de Proyecto',
@@ -930,7 +1126,12 @@ const STAGE_LABELS = {
   e10: 'Etapa 10 — Entrega y Cierre Formal'
 };
 
+const STAGE_KEYS = Object.keys(STAGE_LABELS);
+const STAGE_STATES = ['completado', 'en-curso', 'pendiente', 'bloqueado'];
+const RAG_STATES = ['verde', 'ambar', 'rojo'];
 const PHASE_STAGES = [['e1','e2'], ['e3','e4','e5'], ['e6','e7','e8','e9'], ['e10']];
+let currentProjects = [];
+let selectedProjectIndex = -1;
 
 function setTheme(theme) {
   const nextTheme = theme === 'dark' ? 'dark' : 'light';
@@ -951,7 +1152,7 @@ function initTheme() {
 
 function parseMD(text) {
   const projects = [];
-  const blocks = text.split(/^## proyecto:/m).slice(1);
+  const blocks = text.split(/^## proyecto:/im).slice(1);
   blocks.forEach(block => {
     const lines = block.trim().split('\n');
     const name = lines[0].trim();
@@ -960,9 +1161,55 @@ function parseMD(text) {
       const m = line.match(/^(\w+):\s*(.+)/);
       if (m) proj[m[1].trim().toLowerCase()] = m[2].trim();
     });
-    if (name) projects.push(proj);
+    if (name) projects.push(sanitizeProject(proj));
   });
   return projects;
+}
+
+function sanitizeProject(project) {
+  const safe = {
+    name: (project.name || '').trim(),
+    descripcion: (project.descripcion || '').trim(),
+    responsable: (project.responsable || '').trim(),
+    rag: normalizeRag(project.rag)
+  };
+
+  STAGE_KEYS.forEach(key => {
+    safe[key] = normalizeStage(project[key]);
+  });
+
+  return safe;
+}
+
+function normalizeRag(value) {
+  const v = String(value || '').toLowerCase().trim();
+  return RAG_STATES.includes(v) ? v : 'verde';
+}
+
+function normalizeStage(value) {
+  const v = String(value || '').toLowerCase().trim();
+  return STAGE_STATES.includes(v) ? v : 'pendiente';
+}
+
+function serializeMD(projects) {
+  const lines = [
+    '# Portafolio TI 2026 — Grupo EBI',
+    '# Fuente de datos del tablero de proyectos',
+    '# Formato: editar este archivo y recargar index.html',
+    ''
+  ];
+
+  projects.forEach((project) => {
+    const p = sanitizeProject(project);
+    lines.push(`## proyecto: ${p.name}`);
+    lines.push(`descripcion: ${p.descripcion || '-'}`);
+    lines.push(`responsable: ${p.responsable || '-'}`);
+    lines.push(`rag: ${p.rag}`);
+    STAGE_KEYS.forEach((key) => lines.push(`${key}: ${p[key] || 'pendiente'}`));
+    lines.push('');
+  });
+
+  return `${lines.join('\n').trim()}\n`;
 }
 
 function stageHTML(key, state) {
@@ -982,12 +1229,13 @@ function stageHTML(key, state) {
 }
 
 function renderProjects(projects) {
+  currentProjects = projects.map(sanitizeProject);
   const container = document.getElementById('proj-rows');
   container.innerHTML = '';
 
   let completado = 0, enCurso = 0, bloqueado = 0;
-  projects.forEach(p => {
-    const states = Object.keys(STAGE_LABELS).map(k => (p[k] || 'pendiente').toLowerCase());
+  currentProjects.forEach(p => {
+    const states = STAGE_KEYS.map(k => normalizeStage(p[k]));
     if (states.some(s => s === 'bloqueado')) {
       bloqueado++;
     } else if (states.every(s => s === 'completado')) {
@@ -996,24 +1244,24 @@ function renderProjects(projects) {
       enCurso++;
     }
   });
-  document.getElementById('m-total').textContent = projects.length;
+  document.getElementById('m-total').textContent = currentProjects.length;
   document.getElementById('m-completado').textContent = completado;
   document.getElementById('m-encurso').textContent = enCurso;
   document.getElementById('m-bloqueado').textContent = bloqueado;
 
-  projects.forEach(proj => {
+  currentProjects.forEach(proj => {
     const row = document.createElement('div');
     row.className = 'proj-row';
-    row.dataset.rag = proj.rag || 'verde';
+    row.dataset.rag = normalizeRag(proj.rag);
 
     const phasesHTML = PHASE_STAGES.map(keys =>
-      `<div class="phase-cell">${keys.map(k => stageHTML(k, proj[k] || 'pendiente')).join('')}</div>`
+      `<div class="phase-cell">${keys.map(k => stageHTML(k, normalizeStage(proj[k]))).join('')}</div>`
     ).join('');
 
     row.innerHTML = `
       <div class="proj-info">
         <div class="proj-name-row">
-          <div class="rag-dot rag-${proj.rag || 'verde'}"></div>
+          <div class="rag-dot rag-${normalizeRag(proj.rag)}"></div>
           <span class="proj-name">${proj.name}</span>
         </div>
         <div class="proj-resp">${proj.responsable || ''}</div>
@@ -1021,6 +1269,7 @@ function renderProjects(projects) {
       <div class="phases-grid">${phasesHTML}</div>`;
     container.appendChild(row);
   });
+  refreshMaintainerSelect();
 }
 
 function applyFilter(rag, btn) {
@@ -1031,14 +1280,136 @@ function applyFilter(rag, btn) {
   });
 }
 
+function applyActiveFilter() {
+  const active = document.querySelector('.filter-pill.active');
+  if (active) applyFilter(active.dataset.rag || 'todos', active);
+}
+
+function setMaintainerStatus(message, isError) {
+  const node = document.getElementById('maintainer-status');
+  if (!node) return;
+  node.textContent = message;
+  node.classList.toggle('error', !!isError);
+}
+
+function renderStageEditor() {
+  const grid = document.getElementById('stage-editor-grid');
+  if (!grid || grid.children.length > 0) return;
+
+  STAGE_KEYS.forEach((key) => {
+    const label = document.createElement('label');
+    label.className = 'field-row stage-row';
+
+    const title = document.createElement('span');
+    title.textContent = key.toUpperCase();
+
+    const select = document.createElement('select');
+    select.id = `mp-${key}`;
+
+    STAGE_STATES.forEach((state) => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = `${key.toUpperCase()} - ${state}`;
+      select.appendChild(option);
+    });
+
+    label.appendChild(title);
+    label.appendChild(select);
+    grid.appendChild(label);
+  });
+}
+
+function writeForm(project) {
+  const p = sanitizeProject(project || { name: '', rag: 'verde' });
+  document.getElementById('mp-name').value = p.name || '';
+  document.getElementById('mp-description').value = p.descripcion || '';
+  document.getElementById('mp-responsable').value = p.responsable || '';
+  document.getElementById('mp-rag').value = p.rag || 'verde';
+  STAGE_KEYS.forEach((key) => {
+    document.getElementById(`mp-${key}`).value = p[key] || 'pendiente';
+  });
+}
+
+function readForm() {
+  const project = {
+    name: document.getElementById('mp-name').value,
+    descripcion: document.getElementById('mp-description').value,
+    responsable: document.getElementById('mp-responsable').value,
+    rag: document.getElementById('mp-rag').value
+  };
+
+  STAGE_KEYS.forEach((key) => {
+    project[key] = document.getElementById(`mp-${key}`).value;
+  });
+
+  return sanitizeProject(project);
+}
+
+function refreshMaintainerSelect() {
+  const select = document.getElementById('mp-project-select');
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  const empty = document.createElement('option');
+  empty.value = '-1';
+  empty.textContent = '[Nuevo proyecto]';
+  select.appendChild(empty);
+
+  currentProjects.forEach((project, index) => {
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = project.name;
+    select.appendChild(option);
+  });
+
+  if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
+    select.value = String(selectedProjectIndex);
+    writeForm(currentProjects[selectedProjectIndex]);
+  } else {
+    selectedProjectIndex = -1;
+    select.value = '-1';
+    writeForm({ name: '', rag: 'verde' });
+  }
+}
+
+function saveLocalData(projects) {
+  localStorage.setItem(DATA_KEY, serializeMD(projects));
+}
+
+function downloadMarkdown() {
+  const content = serializeMD(currentProjects);
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'proyectos.md';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 async function loadData() {
   try {
-    const resp = await fetch('proyectos.md?_=' + Date.now());
-    if (!resp.ok) throw new Error('No se pudo cargar proyectos.md (HTTP ' + resp.status + ')');
-    const text = await resp.text();
+    const local = localStorage.getItem(DATA_KEY);
+    const text = local || await (async () => {
+      const resp = await fetch('proyectos.md?_=' + Date.now());
+      if (!resp.ok) throw new Error('No se pudo cargar proyectos.md (HTTP ' + resp.status + ')');
+      return resp.text();
+    })();
+
     const projects = parseMD(text);
     if (!projects.length) throw new Error('No se encontraron proyectos en proyectos.md');
     renderProjects(projects);
+    applyActiveFilter();
+
+    const statusText = local
+      ? 'Datos cargados desde almacenamiento local del navegador.'
+      : 'Datos cargados desde proyectos.md';
+    setMaintainerStatus(statusText, false);
+
+    document.getElementById('error-area').innerHTML = '';
 
     const now = new Date();
     document.getElementById('last-update').textContent =
@@ -1047,13 +1418,118 @@ async function loadData() {
   } catch(e) {
     document.getElementById('error-area').innerHTML =
       `<div class="error-banner">No se pudo cargar el archivo de datos: ${e.message}. Asegúrate de abrir index.html desde un servidor local.</div>`;
+    setMaintainerStatus('No se pudieron cargar datos.', true);
   }
 }
 
-initTheme();
-loadData();
+function setupMaintainerEvents() {
+  const toggle = document.getElementById('maintainer-toggle');
+  const panel = document.getElementById('maintainer-panel');
+  if (toggle && panel) {
+    toggle.addEventListener('click', () => panel.classList.toggle('hidden'));
+  }
+
+  document.getElementById('mp-project-select').addEventListener('change', (event) => {
+    selectedProjectIndex = parseInt(event.target.value, 10);
+    if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
+      writeForm(currentProjects[selectedProjectIndex]);
+      setMaintainerStatus(`Editando: ${currentProjects[selectedProjectIndex].name}`, false);
+    } else {
+      selectedProjectIndex = -1;
+      writeForm({ name: '', rag: 'verde' });
+      setMaintainerStatus('Nuevo proyecto listo para crear.', false);
+    }
+  });
+
+  document.getElementById('mp-new').addEventListener('click', () => {
+    selectedProjectIndex = -1;
+    refreshMaintainerSelect();
+    setMaintainerStatus('Nuevo proyecto listo para crear.', false);
+  });
+
+  document.getElementById('mp-cancel').addEventListener('click', () => {
+    refreshMaintainerSelect();
+    setMaintainerStatus('Cambios descartados en formulario.', false);
+  });
+
+  document.getElementById('mp-save').addEventListener('click', () => {
+    const draft = readForm();
+    if (!draft.name) {
+      setMaintainerStatus('El nombre del proyecto es obligatorio.', true);
+      return;
+    }
+
+    const duplicate = currentProjects.some((p, idx) => {
+      if (idx === selectedProjectIndex) return false;
+      return p.name.toLowerCase() === draft.name.toLowerCase();
+    });
+
+    if (duplicate) {
+      setMaintainerStatus('Ya existe otro proyecto con ese nombre.', true);
+      return;
+    }
+
+    const next = currentProjects.slice();
+    if (selectedProjectIndex >= 0 && selectedProjectIndex < next.length) {
+      next[selectedProjectIndex] = draft;
+    } else {
+      next.push(draft);
+      selectedProjectIndex = next.length - 1;
+    }
+
+    saveLocalData(next);
+    renderProjects(next);
+    applyActiveFilter();
+    setMaintainerStatus('Proyecto guardado en almacenamiento local.', false);
+  });
+
+  document.getElementById('mp-delete').addEventListener('click', () => {
+    if (selectedProjectIndex < 0 || selectedProjectIndex >= currentProjects.length) {
+      setMaintainerStatus('Selecciona un proyecto para eliminar.', true);
+      return;
+    }
+
+    const target = currentProjects[selectedProjectIndex];
+    if (!window.confirm(`Se eliminará el proyecto "${target.name}". ¿Deseas continuar?`)) {
+      return;
+    }
+
+    const next = currentProjects.filter((_, index) => index !== selectedProjectIndex);
+    selectedProjectIndex = -1;
+    saveLocalData(next);
+    renderProjects(next);
+    applyActiveFilter();
+    setMaintainerStatus('Proyecto eliminado en almacenamiento local.', false);
+  });
+
+  document.getElementById('mp-export').addEventListener('click', () => {
+    downloadMarkdown();
+    setMaintainerStatus('Archivo proyectos.md exportado.', false);
+  });
+
+  document.getElementById('mp-reset').addEventListener('click', async () => {
+    localStorage.removeItem(DATA_KEY);
+    selectedProjectIndex = -1;
+    await loadData();
+    setMaintainerStatus('Se restauró la data desde proyectos.md.', false);
+  });
+}
+
+function setupGlobalEvents() {
+  document.querySelectorAll('.filter-pill').forEach((button) => {
+    button.addEventListener('click', () => applyFilter(button.dataset.rag || 'todos', button));
+  });
+
+  document.getElementById('refresh-btn').addEventListener('click', () => loadData());
+}
 
 window.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  renderStageEditor();
+  setupGlobalEvents();
+  setupMaintainerEvents();
+  loadData();
+
   if (window.AOS) {
     AOS.init({ duration: 500, once: true, easing: 'ease-out-cubic' });
   }
