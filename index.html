@@ -1582,6 +1582,112 @@ const PLANNER_TASK_TEMPLATE = {
 let currentProjects = [];
 let selectedProjectIndex = -1;
 let isTableFullscreen = false;
+let dataProvider = createMarkdownDataProvider([]);
+
+/**
+ * @typedef {Object} DataProvider
+ * @property {(markdownText: string) => ProjectModel[]} load
+ * @property {(projects: Object[]) => ProjectModel[]} setAll
+ * @property {() => ProjectModel[]} getAll
+ * @property {() => { total: number, completado: number, enCurso: number, bloqueado: number }} getMetrics
+ * @property {(project: Object) => ProjectModel} create
+ * @property {(index: number, project: Object) => ProjectModel} update
+ * @property {(index: number) => ProjectModel} remove
+ * @property {(markdownText: string) => ProjectModel[]} importMarkdown
+ * @property {() => string} exportMarkdown
+ */
+
+function computeProjectMetrics(projects) {
+  const list = Array.isArray(projects) ? projects : [];
+  let completado = 0;
+  let enCurso = 0;
+  let bloqueado = 0;
+
+  list.forEach((project) => {
+    const states = STAGE_KEYS.map((key) => normalizeStage(project && project[key]));
+    if (states.some((state) => state === 'bloqueado')) {
+      bloqueado++;
+      return;
+    }
+    if (states.every((state) => state === 'completado')) {
+      completado++;
+      return;
+    }
+    enCurso++;
+  });
+
+  return {
+    total: list.length,
+    completado,
+    enCurso,
+    bloqueado
+  };
+}
+
+/**
+ * Crea el provider actual basado en markdown/local memory.
+ * Mantiene encapsulada la colección para facilitar swap de origen (Planner) sin tocar UI.
+ * @param {Object[]} initialProjects
+ * @returns {DataProvider}
+ */
+function createMarkdownDataProvider(initialProjects) {
+  let state = [];
+
+  const provider = {
+    load(markdownText) {
+      state = parseMD(markdownText);
+      return provider.getAll();
+    },
+
+    setAll(projects) {
+      state = validateProjectCollectionOrThrow(projects);
+      return provider.getAll();
+    },
+
+    getAll() {
+      return state.map((project) => ({ ...project }));
+    },
+
+    getMetrics() {
+      return computeProjectMetrics(state);
+    },
+
+    create(project) {
+      const next = validateProjectOrThrow(project, { existingProjects: state, currentIndex: -1 });
+      state = [...state, next];
+      return { ...next };
+    },
+
+    update(index, project) {
+      if (!Number.isInteger(index) || index < 0 || index >= state.length) {
+        throw new Error('Indice de proyecto invalido para actualizar.');
+      }
+      const next = validateProjectOrThrow(project, { existingProjects: state, currentIndex: index });
+      state = state.map((item, itemIndex) => (itemIndex === index ? next : item));
+      return { ...next };
+    },
+
+    remove(index) {
+      if (!Number.isInteger(index) || index < 0 || index >= state.length) {
+        throw new Error('Indice de proyecto invalido para eliminar.');
+      }
+      const removed = state[index];
+      state = state.filter((_, itemIndex) => itemIndex !== index);
+      return { ...removed };
+    },
+
+    importMarkdown(markdownText) {
+      return provider.load(markdownText);
+    },
+
+    exportMarkdown() {
+      return serializeMD(state);
+    }
+  };
+
+  provider.setAll(Array.isArray(initialProjects) ? initialProjects : []);
+  return provider;
+}
 
 function getPlannerBucketsByProject(projectName) {
   const name = String(projectName || '').trim();
@@ -1837,25 +1943,16 @@ function stageHTML(key, state) {
 }
 
 function renderProjects(projects) {
-  currentProjects = projects.map(sanitizeProject);
+  dataProvider.setAll(projects);
+  currentProjects = dataProvider.getAll();
   const container = document.getElementById('proj-rows');
   container.innerHTML = '';
 
-  let completado = 0, enCurso = 0, bloqueado = 0;
-  currentProjects.forEach(p => {
-    const states = STAGE_KEYS.map(k => normalizeStage(p[k]));
-    if (states.some(s => s === 'bloqueado')) {
-      bloqueado++;
-    } else if (states.every(s => s === 'completado')) {
-      completado++;
-    } else {
-      enCurso++;
-    }
-  });
-  document.getElementById('m-total').textContent = currentProjects.length;
-  document.getElementById('m-completado').textContent = completado;
-  document.getElementById('m-encurso').textContent = enCurso;
-  document.getElementById('m-bloqueado').textContent = bloqueado;
+  const metrics = dataProvider.getMetrics();
+  document.getElementById('m-total').textContent = metrics.total;
+  document.getElementById('m-completado').textContent = metrics.completado;
+  document.getElementById('m-encurso').textContent = metrics.enCurso;
+  document.getElementById('m-bloqueado').textContent = metrics.bloqueado;
 
   currentProjects.forEach((proj, idx) => {
     const row = document.createElement('div');
@@ -1986,11 +2083,13 @@ function refreshMaintainerSelect() {
 }
 
 function saveLocalData(projects) {
-  localStorage.setItem(DATA_KEY, serializeMD(projects));
+  dataProvider.setAll(projects);
+  localStorage.setItem(DATA_KEY, dataProvider.exportMarkdown());
 }
 
 function downloadMarkdown() {
-  const content = serializeMD(currentProjects);
+  dataProvider.setAll(currentProjects);
+  const content = dataProvider.exportMarkdown();
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -2011,7 +2110,7 @@ async function loadData() {
       return resp.text();
     })();
 
-    const projects = parseMD(text);
+    const projects = dataProvider.load(text);
     if (!projects.length) throw new Error('No se encontraron proyectos en proyectos.md');
     renderProjects(projects);
     applyActiveFilter();
@@ -2084,22 +2183,18 @@ function setupMaintainerEvents() {
   });
 
   document.getElementById('mp-save').addEventListener('click', () => {
-    let draft;
+    let next;
     try {
-      draft = validateProjectOrThrow(readForm(), {
-        existingProjects: currentProjects,
-        currentIndex: selectedProjectIndex
-      });
+      dataProvider.setAll(currentProjects);
+      if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
+        dataProvider.update(selectedProjectIndex, readForm());
+      } else {
+        dataProvider.create(readForm());
+      }
+      next = dataProvider.getAll();
     } catch (error) {
       setMaintainerStatus(error.message, true);
       return;
-    }
-
-    const next = currentProjects.slice();
-    if (selectedProjectIndex >= 0 && selectedProjectIndex < next.length) {
-      next[selectedProjectIndex] = draft;
-    } else {
-      next.push(draft);
     }
 
     saveLocalData(next);
@@ -2137,7 +2232,16 @@ function setupMaintainerEvents() {
       return;
     }
 
-    const next = currentProjects.filter((_, index) => index !== selectedProjectIndex);
+    let next;
+    try {
+      dataProvider.setAll(currentProjects);
+      dataProvider.remove(selectedProjectIndex);
+      next = dataProvider.getAll();
+    } catch (error) {
+      setMaintainerStatus(error.message, true);
+      return;
+    }
+
     selectedProjectIndex = -1;
     saveLocalData(next);
     renderProjects(next);
