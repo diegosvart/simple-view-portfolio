@@ -693,17 +693,11 @@
   .stage-wrap:hover .stage-tooltip { display: block; }
 
   .legend-strip {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 16px;
-    border-top: 1px solid var(--border);
-    flex-wrap: wrap;
-    border-radius: 0 0 12px 12px;
+    display: none;
   }
 
   .leg-item {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 5px;
     font-size: 11px;
@@ -714,13 +708,6 @@
     width: 9px;
     height: 9px;
     border-radius: 50%;
-  }
-
-  .legend-note {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--mono);
-    margin-left: auto;
   }
 
   #table-fs-exit,
@@ -741,55 +728,106 @@
     overflow: hidden;
   }
 
+  body.table-fullscreen .controls-row {
+    position: fixed;
+    top: 86px;
+    left: 18px;
+    right: 18px;
+    z-index: 1600;
+    margin-bottom: 0;
+    background: var(--bg);
+    padding: 8px 0 12px;
+  }
+
+  body.table-fullscreen .section-actions {
+    margin-left: auto;
+  }
+
   .table-wrap.fullscreen-mode {
     position: fixed;
-    inset: 0;
+    inset: 140px 18px 18px;
     border-radius: 0;
     border: none;
     z-index: 1500;
-    padding: 18px;
+    padding: 0;
     background: var(--bg);
     box-shadow: none;
+    display: flex;
+    flex-direction: column;
   }
 
   .table-wrap.fullscreen-mode .table-scroll {
-    max-height: calc(100vh - 126px);
+    max-height: none;
+    height: 100%;
     border: 1px solid var(--border);
     border-radius: 10px;
+    overflow: visible;
   }
 
   .table-wrap.fullscreen-mode .table-head,
   .table-wrap.fullscreen-mode .proj-row {
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 280px 1fr;
   }
 
   .table-wrap.fullscreen-mode .thead-proj,
   .table-wrap.fullscreen-mode .phase-col-head {
-    padding: 14px 10px;
+    padding: 10px 8px;
     font-size: 12px;
     font-weight: 700;
   }
 
   .table-wrap.fullscreen-mode .proj-name {
-    font-size: 18px;
+    font-size: 15px;
   }
 
   .table-wrap.fullscreen-mode .proj-resp {
-    font-size: 12px;
+    font-size: 10px;
   }
 
   .table-wrap.fullscreen-mode .phase-cell {
-    padding: 16px 8px;
+    padding: 8px 6px;
   }
 
   .table-wrap.fullscreen-mode .bucket-progress-bubble {
-    width: 62px;
-    height: 62px;
-    font-size: 14px;
+    width: 44px;
+    height: 44px;
+    font-size: 10px;
   }
 
   .table-wrap.fullscreen-mode .legend-strip {
-    padding-top: 14px;
+    display: none;
+  }
+
+  .bucket-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--tooltip-bg);
+    color: var(--tooltip-text);
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 9999;
+  }
+
+  .bucket-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--tooltip-bg);
+  }
+
+  .bucket-progress-wrap:hover .bucket-tooltip {
+    display: block;
   }
 
   .rag-badge {
@@ -1112,6 +1150,12 @@
       justify-content: flex-start;
     }
 
+    body.table-fullscreen .controls-row {
+      left: 12px;
+      right: 12px;
+      top: 82px;
+    }
+
     .table-wrap.fullscreen-mode .table-head,
     .table-wrap.fullscreen-mode .proj-row {
       grid-template-columns: 260px 1fr;
@@ -1142,11 +1186,11 @@
     }
 
     .table-wrap.fullscreen-mode {
-      padding: 10px;
+      inset: 132px 10px 10px;
     }
 
     .table-wrap.fullscreen-mode .table-scroll {
-      max-height: calc(100vh - 120px);
+      height: 100%;
     }
 
     .table-wrap.fullscreen-mode .table-head,
@@ -1155,9 +1199,9 @@
     }
 
     .table-wrap.fullscreen-mode .bucket-progress-bubble {
-      width: 50px;
-      height: 50px;
-      font-size: 12px;
+      width: 40px;
+      height: 40px;
+      font-size: 10px;
     }
 
     .timeline-wrap {
@@ -1313,7 +1357,6 @@
       <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div> 40-79% En riesgo</div>
       <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div> 1-39% Crítico</div>
       <div class="leg-item"><div class="leg-dot" style="background:#e0deda;border:1px solid #c8c6bf"></div> 0% Sin avance</div>
-      <span class="legend-note">Vista planner demo: proyecto-plan / bucket-fase / tasks</span>
     </div>
   </div>
 
@@ -1447,60 +1490,92 @@ const BUCKETS = [
   { key: 'cierre', label: 'Cierre' }
 ];
 
-const PLANNER_DEMO_DATA = {
-  'activo fijo': {
-    definicion: [
-      { title: '1.1 Coordinación ficha de proyecto', completed: true },
-      { title: '1.2 Completar FDP', completed: true },
-      { title: '1.3 Análisis FDP', completed: true },
-      { title: '1.4 Iteración FDP', completed: false },
-      { title: '1.5 Aprobación de Sponsor', completed: false }
-    ],
-    diseno: [
-      { title: '2.1 Coordinación especificación funcional de requerimientos', completed: true },
-      { title: '2.2 Completar EFR', completed: true },
-      { title: '2.3 Análisis EFR', completed: true },
-      { title: '2.4 Iteración EFR', completed: true },
-      { title: '2.5 Aprobación Lider de proyecto', completed: false },
-      { title: '2.6 Coordinación especificación de requerimientos técnicos', completed: false },
-      { title: '2.7 Completar ERT', completed: false },
-      { title: '2.8 Análisis ERT', completed: false },
-      { title: '2.9 Iteración ERT', completed: false },
-      { title: '2.10 Aprobación Lider de proyecto', completed: false },
-      { title: '2.11 Aprobación de Sponsor', completed: false },
-      { title: '2.12 Envío a cotización', completed: false },
-      { title: '2.13 Respuestas dudas y consultas proveedores', completed: false },
-      { title: '2.14 Análisis y selección de proveedor', completed: false },
-      { title: '2.15 Coordinación Kick Off', completed: false }
-    ],
-    ejecucion: [
-      { title: '3.1 Solicitud planificación proyecto', completed: true },
-      { title: '3.2 Análisis de planificación', completed: true },
-      { title: '3.3 Reunión Kick Off', completed: false },
-      { title: '3.4 Reuniones de seguimiento', completed: false },
-      { title: '3.5 Definición plan de pruebas', completed: false },
-      { title: '3.6 Ejecución plan de pruebas', completed: false }
-    ],
-    implementacion: [
-      { title: '4.1 Reunión definición marcha blanca', completed: false },
-      { title: '4.2 Preparación de ambiente productivo', completed: false },
-      { title: '4.3 Certificación', completed: false },
-      { title: '4.4 Roll Out', completed: false }
-    ],
-    cierre: [
-      { title: '5.1 Periodo de garantía', completed: false },
-      { title: '5.2 Retro alimentación del proyecto', completed: false },
-      { title: '5.3 Cierre formal del proyecto', completed: false }
-    ]
-  }
+const PLANNER_TASK_TEMPLATE = {
+  definicion: [
+    '1.1 Coordinación ficha de proyecto',
+    '1.2 Completar FDP',
+    '1.3 Análisis FDP',
+    '1.4 Iteración FDP',
+    '1.5 Aprobación de Sponsor'
+  ],
+  diseno: [
+    '2.1 Coordinación especificación funcional de requerimientos',
+    '2.2 Completar EFR',
+    '2.3 Análisis EFR',
+    '2.4 Iteración EFR',
+    '2.5 Aprobación Lider de proyecto',
+    '2.6 Coordinación especificación de requerimientos técnicos',
+    '2.7 Completar ERT',
+    '2.8 Análisis ERT',
+    '2.9 Iteración ERT',
+    '2.10 Aprobación Lider de proyecto',
+    '2.11 Aprobación de Sponsor',
+    '2.12 Envío a cotización',
+    '2.13 Respuestas dudas y consultas proveedores',
+    '2.14 Análisis y selección de proveedor',
+    '2.15 Coordinación Kick Off'
+  ],
+  ejecucion: [
+    '3.1 Solicitud planificación proyecto',
+    '3.2 Análisis de planificación',
+    '3.3 Reunión Kick Off',
+    '3.4 Reuniones de seguimiento',
+    '3.5 Definición plan de pruebas',
+    '3.6 Ejecución plan de pruebas'
+  ],
+  implementacion: [
+    '4.1 Reunión definición marcha blanca',
+    '4.2 Preparación de ambiente productivo',
+    '4.3 Certificación',
+    '4.4 Roll Out'
+  ],
+  cierre: [
+    '5.1 Periodo de garantía',
+    '5.2 Retro alimentación del proyecto',
+    '5.3 Cierre formal del proyecto'
+  ]
 };
 let currentProjects = [];
 let selectedProjectIndex = -1;
 let isTableFullscreen = false;
 
 function getPlannerBucketsByProject(projectName) {
-  const key = String(projectName || '').trim().toLowerCase();
-  return PLANNER_DEMO_DATA[key] || {};
+  const name = String(projectName || '').trim();
+  const seed = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const buckets = {};
+
+  BUCKETS.forEach((bucket, bucketIndex) => {
+    const titles = PLANNER_TASK_TEMPLATE[bucket.key] || [];
+    buckets[bucket.key] = titles.map((title, taskIndex) => ({
+      title,
+      completed: ((seed + bucketIndex * 3 + taskIndex) % 5) < 2
+    }));
+  });
+
+  if (name.toLowerCase() === 'activo fijo') {
+    buckets.definicion = buckets.definicion.map((task, index) => ({
+      title: task.title,
+      completed: index < 3
+    }));
+    buckets.diseno = buckets.diseno.map((task, index) => ({
+      title: task.title,
+      completed: index < 4
+    }));
+    buckets.ejecucion = buckets.ejecucion.map((task, index) => ({
+      title: task.title,
+      completed: index < 2
+    }));
+    buckets.implementacion = buckets.implementacion.map((task) => ({
+      title: task.title,
+      completed: false
+    }));
+    buckets.cierre = buckets.cierre.map((task) => ({
+      title: task.title,
+      completed: false
+    }));
+  }
+
+  return buckets;
 }
 
 function summarizeBucket(tasks) {
@@ -1526,13 +1601,14 @@ function getBucketLevel(summary) {
 function bucketCellHTML(bucketLabel, tasks) {
   const summary = summarizeBucket(tasks);
   const levelClass = getBucketLevel(summary);
-  const title = summary.total
-    ? `${bucketLabel}: ${summary.completed}/${summary.total} tareas completadas (${summary.percent}%)`
-    : `${bucketLabel}: sin tareas mapeadas`;
+  const tooltipLines = summary.total
+    ? tasks.map((task) => `${task.completed ? 'OK' : 'Pend'} ${task.title}`).join('<br>')
+    : 'Sin tareas mapeadas';
 
   return `
-    <div class="bucket-progress-wrap" title="${title}">
+    <div class="bucket-progress-wrap">
       <div class="bucket-progress-bubble ${levelClass}">${summary.percent}%</div>
+      <div class="bucket-tooltip"><strong>${bucketLabel}</strong><br>${summary.completed}/${summary.total} tareas completadas<br>${summary.percent}% de cumplimiento<br><br>${tooltipLines}</div>
     </div>`;
 }
 
