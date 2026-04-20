@@ -1462,6 +1462,48 @@
 </footer>
 
 <script>
+/**
+ * @typedef {Object} ProjectModel
+ * Contrato canónico de datos para un proyecto del portafolio simple.
+ *
+ * Campos de identidad:
+ * @property {string} name         - Nombre único del proyecto (requerido).
+ * @property {string} descripcion  - Descripción breve del alcance o propósito.
+ * @property {string} responsable  - Nombre del responsable / PM asignado.
+ *
+ * Estado general:
+ * @property {RagValue} rag        - Semáforo RAG del proyecto.
+ *
+ * Etapas del ciclo de vida (E1–E10):
+ * @property {StageValue} e1   - Ficha de Proyecto
+ * @property {StageValue} e2   - Aprobación de Sponsor
+ * @property {StageValue} e3   - Requerimientos Funcionales
+ * @property {StageValue} e4   - Requerimientos Técnicos
+ * @property {StageValue} e5   - Cotización y Proveedor
+ * @property {StageValue} e6   - Kick Off
+ * @property {StageValue} e7   - Iteración y Seguimiento
+ * @property {StageValue} e8   - Pruebas
+ * @property {StageValue} e9   - Marcha Blanca
+ * @property {StageValue} e10  - Entrega y Cierre Formal
+ */
+
+/**
+ * @typedef {'verde'|'ambar'|'rojo'} RagValue
+ * Valores válidos del semáforo RAG (estado general del proyecto).
+ * - verde  → en tiempo, sin riesgos activos
+ * - ambar  → en riesgo o con desviación menor (valor de código sin tilde)
+ * - rojo   → retrasado o bloqueado sin resolución
+ */
+
+/**
+ * @typedef {'completado'|'en-curso'|'pendiente'|'bloqueado'} StageValue
+ * Valores válidos del estado de cada etapa.
+ * - completado  → etapa finalizada con evidencia
+ * - en-curso    → etapa activa actualmente
+ * - pendiente   → no iniciada
+ * - bloqueado   → detenida por dependencia externa
+ */
+
 const THEME_KEY = 'pm-report-theme';
 const DATA_KEY = 'pm-report-projects-markdown';
 
@@ -1479,7 +1521,9 @@ const STAGE_LABELS = {
 };
 
 const STAGE_KEYS = Object.keys(STAGE_LABELS);
+/** @type {StageValue[]} Catálogo canónico de estados de etapa */
 const STAGE_STATES = ['completado', 'en-curso', 'pendiente', 'bloqueado'];
+/** @type {RagValue[]} Catálogo canónico de valores RAG (ambar sin tilde es el valor de código) */
 const RAG_STATES = ['verde', 'ambar', 'rojo'];
 const PHASE_STAGES = [['e1','e2'], ['e3','e4','e5'], ['e6','e7','e8','e9'], ['e10']];
 const BUCKETS = [
@@ -1645,6 +1689,12 @@ function parseMD(text) {
   return projects;
 }
 
+/**
+ * Normaliza cualquier objeto en un {@link ProjectModel} canónico.
+ * Garantiza que todos los campos tengan valores válidos según los catálogos.
+ * @param {Object} project - Objeto con los datos crudos del proyecto.
+ * @returns {ProjectModel}
+ */
 function sanitizeProject(project) {
   const safe = {
     name: (project.name || '').trim(),
