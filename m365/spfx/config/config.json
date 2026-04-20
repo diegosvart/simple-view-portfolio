@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "mi-sitio-html-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/miSitioHtml/MiSitioHtmlWebPart.js",
+          "manifest": "./src/webparts/miSitioHtml/MiSitioHtmlWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "MiSitioHtmlWebPartStrings": "lib/webparts/miSitioHtml/loc/{locale}.js"
+  }
+}
