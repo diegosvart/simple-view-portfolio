@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
 <script defer src="https://unpkg.com/lucide@latest"></script>
 <script defer src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
 
@@ -210,8 +211,11 @@
   }
 
   .metric-card {
-    background: var(--surface);
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--border-md);
     border-radius: 10px;
     padding: 10px 12px;
     display: flex;
@@ -220,7 +224,7 @@
     min-height: 56px;
     gap: 10px;
     box-shadow: var(--shadow-sm);
-    transition: border-color .2s ease, transform .15s ease;
+    transition: border-color .2s ease, transform .15s ease, box-shadow .2s ease;
   }
 
   .metric-card:hover { transform: translateY(-1px); }
@@ -246,6 +250,11 @@
   .metric-kpi--curso .metric-val { color: var(--metric-en-curso); }
   .metric-kpi--bloqueado .metric-val { color: var(--metric-bloqueado); }
 
+  .metric-kpi--total     { border-left-color: var(--border-md); }
+  .metric-kpi--completado { border-left-color: var(--green); box-shadow: var(--shadow-sm), 0 0 0 1px rgba(29,158,117,0.15); }
+  .metric-kpi--curso      { border-left-color: var(--amber); box-shadow: var(--shadow-sm), 0 0 0 1px rgba(186,117,23,0.15); }
+  .metric-kpi--bloqueado  { border-left-color: var(--red);   box-shadow: var(--shadow-sm), 0 0 0 1px rgba(226,75,74,0.15); }
+
   .controls-row {
     display: flex;
     align-items: center;
@@ -253,6 +262,25 @@
     margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 12px;
+  }
+
+  .controls-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Requested: keep old right controls hidden in normal view */
+  .controls-right {
+    display: none;
+  }
+
+  .section-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .section-label {
@@ -268,6 +296,124 @@
   .filter-group {
     display: flex;
     gap: 4px;
+  }
+
+  .btn-outline.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .maintainer-panel {
+    margin-bottom: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .maintainer-panel.hidden {
+    display: none;
+  }
+
+  .maintainer-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-head h3 {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .maintainer-head p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  .maintainer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field-col-2 {
+    grid-column: 1 / -1;
+  }
+
+  .field-row span {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 600;
+  }
+
+  .field-row input,
+  .field-row textarea,
+  .field-row select {
+    border: 1px solid var(--border-md);
+    background: var(--surface2);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+
+  .field-row textarea {
+    resize: vertical;
+  }
+
+  .stage-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stage-row span {
+    font-family: var(--mono);
+  }
+
+  .maintainer-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  #maintainer-status {
+    font-size: 12px;
+    color: var(--text-2);
+  }
+
+  #maintainer-status.error {
+    color: var(--red-text);
   }
 
   .filter-pill {
@@ -294,6 +440,7 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
+    position: relative;
   }
 
   .table-scroll {
@@ -338,7 +485,7 @@
 
   .thead-phases {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 
   .phase-col-head {
@@ -362,7 +509,7 @@
   }
 
   .proj-row:last-child { border-bottom: none; }
-  .proj-row:hover { background: var(--surface2); }
+  .proj-row:hover { background: var(--surface2); cursor: pointer; }
   .proj-row.hidden { display: none; }
 
   .proj-info {
@@ -412,19 +559,61 @@
 
   .phases-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 
   .phase-cell {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 0;
     padding: 14px 8px;
     border-right: 1px solid var(--border);
   }
 
   .phase-cell:last-child { border-right: none; }
+
+  .bucket-progress-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .bucket-progress-bubble {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -0.02em;
+    border: 1px solid transparent;
+  }
+
+  .bucket-progress-bubble.level-green {
+    background: var(--green);
+    color: #fff;
+  }
+
+  .bucket-progress-bubble.level-amber {
+    background: var(--amber-bg);
+    color: var(--amber-text);
+    border-color: rgba(186,117,23,0.25);
+  }
+
+  .bucket-progress-bubble.level-red {
+    background: var(--red-bg);
+    color: var(--red-text);
+    border-color: rgba(226,75,74,0.25);
+  }
+
+  .bucket-progress-bubble.level-gray {
+    background: var(--surface2);
+    color: var(--text-3);
+    border-color: var(--border-md);
+  }
 
   .stage-wrap {
     position: relative;
@@ -504,17 +693,11 @@
   .stage-wrap:hover .stage-tooltip { display: block; }
 
   .legend-strip {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 16px;
-    border-top: 1px solid var(--border);
-    flex-wrap: wrap;
-    border-radius: 0 0 12px 12px;
+    display: none;
   }
 
   .leg-item {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 5px;
     font-size: 11px;
@@ -525,6 +708,126 @@
     width: 9px;
     height: 9px;
     border-radius: 50%;
+  }
+
+  #table-fs-exit,
+  #table-export-png {
+    display: none;
+  }
+
+  body.table-fullscreen #table-fs-open {
+    display: none;
+  }
+
+  body.table-fullscreen #table-fs-exit,
+  body.table-fullscreen #table-export-png {
+    display: inline-flex;
+  }
+
+  body.table-fullscreen {
+    overflow: hidden;
+  }
+
+  body.table-fullscreen .controls-row {
+    position: fixed;
+    top: 86px;
+    left: 18px;
+    right: 18px;
+    z-index: 1600;
+    margin-bottom: 0;
+    background: var(--bg);
+    padding: 8px 0 12px;
+  }
+
+  body.table-fullscreen .section-actions {
+    margin-left: auto;
+  }
+
+  .table-wrap.fullscreen-mode {
+    position: fixed;
+    inset: 140px 18px 18px;
+    border-radius: 0;
+    border: none;
+    z-index: 1500;
+    padding: 0;
+    background: var(--bg);
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .table-wrap.fullscreen-mode .table-scroll {
+    max-height: none;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: visible;
+  }
+
+  .table-wrap.fullscreen-mode .table-head,
+  .table-wrap.fullscreen-mode .proj-row {
+    grid-template-columns: 280px 1fr;
+  }
+
+  .table-wrap.fullscreen-mode .thead-proj,
+  .table-wrap.fullscreen-mode .phase-col-head {
+    padding: 10px 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .table-wrap.fullscreen-mode .proj-name {
+    font-size: 15px;
+  }
+
+  .table-wrap.fullscreen-mode .proj-resp {
+    font-size: 10px;
+  }
+
+  .table-wrap.fullscreen-mode .phase-cell {
+    padding: 8px 6px;
+  }
+
+  .table-wrap.fullscreen-mode .bucket-progress-bubble {
+    width: 44px;
+    height: 44px;
+    font-size: 10px;
+  }
+
+  .table-wrap.fullscreen-mode .legend-strip {
+    display: none;
+  }
+
+  .bucket-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--tooltip-bg);
+    color: var(--tooltip-text);
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 9999;
+  }
+
+  .bucket-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--tooltip-bg);
+  }
+
+  .bucket-progress-wrap:hover .bucket-tooltip {
+    display: block;
   }
 
   .rag-badge {
@@ -672,6 +975,7 @@
   :root[data-theme="dark"] .pbs-2 { background: #0c2a1e; color: #5dffc0; }
   :root[data-theme="dark"] .pbs-3 { background: #2e1e00; color: #ffcc4d; }
   :root[data-theme="dark"] .pbs-4 { background: #1c1e26; color: #b0c0d8; }
+  :root[data-theme="dark"] .metric-card { background: rgba(23,28,36,0.72); }
 
   .error-banner {
     background: var(--red-bg);
@@ -681,6 +985,12 @@
     font-size: 13px;
     color: var(--red-text);
     margin-bottom: 1rem;
+  }
+
+  .error-banner.warning {
+    background: var(--amber-bg);
+    border-color: rgba(186,117,23,0.28);
+    color: var(--amber-text);
   }
 
   footer {
@@ -707,6 +1017,116 @@
     color: var(--text-2);
   }
 
+  /* ===== Semantic colored buttons ===== */
+  .btn-green, .btn-red, .btn-amber {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-green  { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-green:hover  { filter: brightness(1.12); }
+  .btn-red    { background: var(--red);   color: #fff; border-color: var(--red); }
+  .btn-red:hover    { filter: brightness(1.12); }
+  .btn-amber  { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .btn-amber:hover  { filter: brightness(1.12); }
+
+  /* ===== Maintainer close (×) button ===== */
+  .btn-icon-close {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-md);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .btn-icon-close:hover { background: var(--red-bg); color: var(--red-text); border-color: rgba(226,75,74,0.3); }
+
+  /* ===== Save success inline dialog ===== */
+  .save-success-dialog {
+    background: var(--green-bg);
+    border: 1px solid rgba(29,158,117,0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    animation: slideDown .25s ease;
+  }
+  .save-success-dialog.hidden { display: none; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .save-success-icon {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .save-success-msg {
+    flex: 1; min-width: 140px;
+    font-size: 13px;
+    color: var(--green-text);
+    font-weight: 500;
+  }
+  .save-success-actions { display: flex; gap: 8px; }
+
+  /* ===== Loading screen ===== */
+  #loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    transition: opacity .4s ease;
+  }
+  #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+  .loader-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .loader-spinner {
+    width: 52px; height: 52px;
+    border: 3px solid var(--border-md);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: loaderSpin .75s linear infinite;
+  }
+  @keyframes loaderSpin { to { transform: rotate(360deg); } }
+  .loader-brand {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--text);
+  }
+  .loader-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--mono);
+    margin-top: -8px;
+  }
+
   @media (max-width: 920px) {
     .metrics-row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -715,6 +1135,30 @@
     .table-head,
     .proj-row {
       grid-template-columns: 230px 1fr;
+    }
+
+    .stage-editor-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .thead-phases,
+    .phases-grid {
+      min-width: 540px;
+    }
+
+    .section-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    body.table-fullscreen .controls-row {
+      left: 12px;
+      right: 12px;
+      top: 82px;
+    }
+
+    .table-wrap.fullscreen-mode .table-head,
+    .table-wrap.fullscreen-mode .proj-row {
+      grid-template-columns: 260px 1fr;
     }
   }
 
@@ -731,9 +1175,33 @@
       grid-template-columns: 1fr;
     }
 
+    .maintainer-grid,
+    .stage-editor-grid {
+      grid-template-columns: 1fr;
+    }
+
     .table-head,
     .proj-row {
       grid-template-columns: 180px 1fr;
+    }
+
+    .table-wrap.fullscreen-mode {
+      inset: 132px 10px 10px;
+    }
+
+    .table-wrap.fullscreen-mode .table-scroll {
+      height: 100%;
+    }
+
+    .table-wrap.fullscreen-mode .table-head,
+    .table-wrap.fullscreen-mode .proj-row {
+      grid-template-columns: 210px 1fr;
+    }
+
+    .table-wrap.fullscreen-mode .bucket-progress-bubble {
+      width: 40px;
+      height: 40px;
+      font-size: 10px;
     }
 
     .timeline-wrap {
@@ -743,6 +1211,14 @@
 </style>
 </head>
 <body>
+
+<div id="loading-screen">
+  <div class="loader-inner">
+    <div class="loader-spinner"></div>
+    <div class="loader-brand">Portafolio TI 2026</div>
+    <div class="loader-sub">Cargando datos del portafolio…</div>
+  </div>
+</div>
 
 <header>
   <div class="header-left">
@@ -767,7 +1243,7 @@
       <span id="theme-toggle-label">Modo oscuro</span>
     </button>
     <span class="last-update" id="last-update">Cargando…</span>
-    <button class="btn-outline" onclick="location.reload()">Actualizar</button>
+    <button class="btn-outline" id="refresh-btn" type="button">Actualizar</button>
   </div>
 </header>
 
@@ -783,33 +1259,104 @@
 
   <div class="controls-row">
     <span class="section-label">Estado de avance por proyecto</span>
-    <div class="filter-group">
-      <button class="filter-pill active" onclick="applyFilter('todos',this)">Todos</button>
-      <button class="filter-pill" onclick="applyFilter('verde',this)">Verde</button>
-      <button class="filter-pill" onclick="applyFilter('ambar',this)">Ámbar</button>
-      <button class="filter-pill" onclick="applyFilter('rojo',this)">Rojo</button>
+    <div class="section-actions">
+      <button class="btn-outline" id="table-fs-open" type="button">Pantalla completa</button>
+      <button class="btn-outline" id="table-export-png" type="button">Exportar PNG</button>
+      <button class="btn-outline" id="table-fs-exit" type="button">Salir pantalla completa</button>
+    </div>
+    <div class="controls-right">
+      <div class="filter-group">
+        <button class="filter-pill active" data-rag="todos">Todos</button>
+        <button class="filter-pill" data-rag="verde">Al día</button>
+        <button class="filter-pill" data-rag="ambar">En riesgo</button>
+        <button class="filter-pill" data-rag="rojo">Crítico</button>
+      </div>
+      <button class="btn-outline" id="maintainer-toggle" type="button">Mantenedor proyectos</button>
     </div>
   </div>
 
-  <div class="table-wrap" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
-    <div class="table-scroll">
+  <section class="maintainer-panel hidden" id="maintainer-panel">
+    <div class="maintainer-head">
+      <div>
+        <h3>Mantenedor de proyectos</h3>
+        <p>Modo genérico: persistencia local del navegador. Doble clic en la tabla para abrir.</p>
+      </div>
+      <div class="maintainer-actions">
+        <button class="btn-green" id="mp-new" type="button">Nuevo</button>
+        <button class="btn-red" id="mp-delete" type="button">Eliminar</button>
+        <button class="btn-icon-close" id="mp-close" type="button" title="Cerrar mantenedor">×</button>
+      </div>
+    </div>
+
+    <div class="maintainer-grid">
+      <label class="field-row">
+        <span>Proyecto</span>
+        <select id="mp-project-select"></select>
+      </label>
+      <label class="field-row">
+        <span>Nombre</span>
+        <input id="mp-name" type="text" maxlength="120" placeholder="Nombre del proyecto" />
+      </label>
+      <label class="field-row field-col-2">
+        <span>Descripción</span>
+        <textarea id="mp-description" rows="2" placeholder="Descripción del proyecto"></textarea>
+      </label>
+      <label class="field-row">
+        <span>Responsable</span>
+        <input id="mp-responsable" type="text" maxlength="80" placeholder="PM" />
+      </label>
+      <label class="field-row">
+        <span>RAG</span>
+        <select id="mp-rag">
+          <option value="verde">Verde</option>
+          <option value="ambar">Ámbar</option>
+          <option value="rojo">Rojo</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="stage-editor-grid" id="stage-editor-grid"></div>
+
+    <div id="save-success-dialog" class="save-success-dialog hidden">
+      <div class="save-success-icon">✓</div>
+      <div class="save-success-msg">Proyecto guardado correctamente.</div>
+      <div class="save-success-actions">
+        <button class="btn-outline" id="mp-success-continue" type="button">Seguir editando</button>
+        <button class="btn-outline" id="mp-success-exit" type="button">Salir</button>
+      </div>
+    </div>
+
+    <div class="maintainer-footer">
+      <span id="maintainer-status">Sin cambios</span>
+      <div class="maintainer-actions">
+        <button class="btn-outline" id="mp-export" type="button">Exportar .md</button>
+        <button class="btn-amber" id="mp-reset" type="button">Volver a proyectos.md</button>
+        <button class="btn-outline" id="mp-form-reset" type="button">Limpiar</button>
+        <button class="btn-outline" id="mp-cancel" type="button">Cancelar</button>
+        <button class="btn-green" id="mp-save" type="button">Guardar</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="table-wrap" id="progress-table-wrap" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
+    <div class="table-scroll" id="progress-table-scroll">
       <div class="table-head">
         <div class="thead-proj">Proyecto</div>
         <div class="thead-phases">
           <div class="phase-col-head">Definición</div>
           <div class="phase-col-head">Diseño</div>
           <div class="phase-col-head">Ejecución</div>
+          <div class="phase-col-head">Implementación</div>
           <div class="phase-col-head">Cierre</div>
         </div>
       </div>
       <div id="proj-rows"></div>
     </div>
     <div class="legend-strip">
-      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div> Completado</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div> En curso</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#e0deda;border:1px solid #c8c6bf"></div> Pendiente</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--red-bg);border:1px solid rgba(226,75,74,.3)"></div> Bloqueado</div>
-
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div> 80-100% Al día</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div> 40-79% En riesgo</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div> 1-39% Crítico</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#e0deda;border:1px solid #c8c6bf"></div> 0% Sin avance</div>
     </div>
   </div>
 
@@ -916,6 +1463,7 @@
 
 <script>
 const THEME_KEY = 'pm-report-theme';
+const DATA_KEY = 'pm-report-projects-markdown';
 
 const STAGE_LABELS = {
   e1:  'Etapa 1 — Ficha de Proyecto',
@@ -930,7 +1478,139 @@ const STAGE_LABELS = {
   e10: 'Etapa 10 — Entrega y Cierre Formal'
 };
 
+const STAGE_KEYS = Object.keys(STAGE_LABELS);
+const STAGE_STATES = ['completado', 'en-curso', 'pendiente', 'bloqueado'];
+const RAG_STATES = ['verde', 'ambar', 'rojo'];
 const PHASE_STAGES = [['e1','e2'], ['e3','e4','e5'], ['e6','e7','e8','e9'], ['e10']];
+const BUCKETS = [
+  { key: 'definicion', label: 'Definición' },
+  { key: 'diseno', label: 'Diseño' },
+  { key: 'ejecucion', label: 'Ejecución' },
+  { key: 'implementacion', label: 'Implementación' },
+  { key: 'cierre', label: 'Cierre' }
+];
+
+const PLANNER_TASK_TEMPLATE = {
+  definicion: [
+    '1.1 Coordinación ficha de proyecto',
+    '1.2 Completar FDP',
+    '1.3 Análisis FDP',
+    '1.4 Iteración FDP',
+    '1.5 Aprobación de Sponsor'
+  ],
+  diseno: [
+    '2.1 Coordinación especificación funcional de requerimientos',
+    '2.2 Completar EFR',
+    '2.3 Análisis EFR',
+    '2.4 Iteración EFR',
+    '2.5 Aprobación Lider de proyecto',
+    '2.6 Coordinación especificación de requerimientos técnicos',
+    '2.7 Completar ERT',
+    '2.8 Análisis ERT',
+    '2.9 Iteración ERT',
+    '2.10 Aprobación Lider de proyecto',
+    '2.11 Aprobación de Sponsor',
+    '2.12 Envío a cotización',
+    '2.13 Respuestas dudas y consultas proveedores',
+    '2.14 Análisis y selección de proveedor',
+    '2.15 Coordinación Kick Off'
+  ],
+  ejecucion: [
+    '3.1 Solicitud planificación proyecto',
+    '3.2 Análisis de planificación',
+    '3.3 Reunión Kick Off',
+    '3.4 Reuniones de seguimiento',
+    '3.5 Definición plan de pruebas',
+    '3.6 Ejecución plan de pruebas'
+  ],
+  implementacion: [
+    '4.1 Reunión definición marcha blanca',
+    '4.2 Preparación de ambiente productivo',
+    '4.3 Certificación',
+    '4.4 Roll Out'
+  ],
+  cierre: [
+    '5.1 Periodo de garantía',
+    '5.2 Retro alimentación del proyecto',
+    '5.3 Cierre formal del proyecto'
+  ]
+};
+let currentProjects = [];
+let selectedProjectIndex = -1;
+let isTableFullscreen = false;
+
+function getPlannerBucketsByProject(projectName) {
+  const name = String(projectName || '').trim();
+  const seed = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const buckets = {};
+
+  BUCKETS.forEach((bucket, bucketIndex) => {
+    const titles = PLANNER_TASK_TEMPLATE[bucket.key] || [];
+    buckets[bucket.key] = titles.map((title, taskIndex) => ({
+      title,
+      completed: ((seed + bucketIndex * 3 + taskIndex) % 5) < 2
+    }));
+  });
+
+  if (name.toLowerCase() === 'activo fijo') {
+    buckets.definicion = buckets.definicion.map((task, index) => ({
+      title: task.title,
+      completed: index < 3
+    }));
+    buckets.diseno = buckets.diseno.map((task, index) => ({
+      title: task.title,
+      completed: index < 4
+    }));
+    buckets.ejecucion = buckets.ejecucion.map((task, index) => ({
+      title: task.title,
+      completed: index < 2
+    }));
+    buckets.implementacion = buckets.implementacion.map((task) => ({
+      title: task.title,
+      completed: false
+    }));
+    buckets.cierre = buckets.cierre.map((task) => ({
+      title: task.title,
+      completed: false
+    }));
+  }
+
+  return buckets;
+}
+
+function summarizeBucket(tasks) {
+  const list = Array.isArray(tasks) ? tasks : [];
+  const total = list.length;
+  let completed = 0;
+  list.forEach(task => {
+    if (task && task.completed) completed++;
+  });
+
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return { total, completed, percent };
+}
+
+function getBucketLevel(summary) {
+  if (!summary.total) return 'level-gray';
+  if (summary.percent >= 80) return 'level-green';
+  if (summary.percent >= 40) return 'level-amber';
+  if (summary.percent > 0) return 'level-red';
+  return 'level-gray';
+}
+
+function bucketCellHTML(bucketLabel, tasks) {
+  const summary = summarizeBucket(tasks);
+  const levelClass = getBucketLevel(summary);
+  const tooltipLines = summary.total
+    ? tasks.map((task) => `${task.completed ? 'OK' : 'Pend'} ${task.title}`).join('<br>')
+    : 'Sin tareas mapeadas';
+
+  return `
+    <div class="bucket-progress-wrap">
+      <div class="bucket-progress-bubble ${levelClass}">${summary.percent}%</div>
+      <div class="bucket-tooltip"><strong>${bucketLabel}</strong><br>${summary.completed}/${summary.total} tareas completadas<br>${summary.percent}% de cumplimiento<br><br>${tooltipLines}</div>
+    </div>`;
+}
 
 function setTheme(theme) {
   const nextTheme = theme === 'dark' ? 'dark' : 'light';
@@ -951,7 +1631,7 @@ function initTheme() {
 
 function parseMD(text) {
   const projects = [];
-  const blocks = text.split(/^## proyecto:/m).slice(1);
+  const blocks = text.split(/^## proyecto:/im).slice(1);
   blocks.forEach(block => {
     const lines = block.trim().split('\n');
     const name = lines[0].trim();
@@ -960,9 +1640,55 @@ function parseMD(text) {
       const m = line.match(/^(\w+):\s*(.+)/);
       if (m) proj[m[1].trim().toLowerCase()] = m[2].trim();
     });
-    if (name) projects.push(proj);
+    if (name) projects.push(sanitizeProject(proj));
   });
   return projects;
+}
+
+function sanitizeProject(project) {
+  const safe = {
+    name: (project.name || '').trim(),
+    descripcion: (project.descripcion || '').trim(),
+    responsable: (project.responsable || '').trim(),
+    rag: normalizeRag(project.rag)
+  };
+
+  STAGE_KEYS.forEach(key => {
+    safe[key] = normalizeStage(project[key]);
+  });
+
+  return safe;
+}
+
+function normalizeRag(value) {
+  const v = String(value || '').toLowerCase().trim();
+  return RAG_STATES.includes(v) ? v : 'verde';
+}
+
+function normalizeStage(value) {
+  const v = String(value || '').toLowerCase().trim();
+  return STAGE_STATES.includes(v) ? v : 'pendiente';
+}
+
+function serializeMD(projects) {
+  const lines = [
+    '# Portafolio TI 2026 — Grupo EBI',
+    '# Fuente de datos del tablero de proyectos',
+    '# Formato: editar este archivo y recargar index.html',
+    ''
+  ];
+
+  projects.forEach((project) => {
+    const p = sanitizeProject(project);
+    lines.push(`## proyecto: ${p.name}`);
+    lines.push(`descripcion: ${p.descripcion || '-'}`);
+    lines.push(`responsable: ${p.responsable || '-'}`);
+    lines.push(`rag: ${p.rag}`);
+    STAGE_KEYS.forEach((key) => lines.push(`${key}: ${p[key] || 'pendiente'}`));
+    lines.push('');
+  });
+
+  return `${lines.join('\n').trim()}\n`;
 }
 
 function stageHTML(key, state) {
@@ -982,12 +1708,13 @@ function stageHTML(key, state) {
 }
 
 function renderProjects(projects) {
+  currentProjects = projects.map(sanitizeProject);
   const container = document.getElementById('proj-rows');
   container.innerHTML = '';
 
   let completado = 0, enCurso = 0, bloqueado = 0;
-  projects.forEach(p => {
-    const states = Object.keys(STAGE_LABELS).map(k => (p[k] || 'pendiente').toLowerCase());
+  currentProjects.forEach(p => {
+    const states = STAGE_KEYS.map(k => normalizeStage(p[k]));
     if (states.some(s => s === 'bloqueado')) {
       bloqueado++;
     } else if (states.every(s => s === 'completado')) {
@@ -996,31 +1723,36 @@ function renderProjects(projects) {
       enCurso++;
     }
   });
-  document.getElementById('m-total').textContent = projects.length;
+  document.getElementById('m-total').textContent = currentProjects.length;
   document.getElementById('m-completado').textContent = completado;
   document.getElementById('m-encurso').textContent = enCurso;
   document.getElementById('m-bloqueado').textContent = bloqueado;
 
-  projects.forEach(proj => {
+  currentProjects.forEach((proj, idx) => {
     const row = document.createElement('div');
     row.className = 'proj-row';
-    row.dataset.rag = proj.rag || 'verde';
+    row.dataset.rag = normalizeRag(proj.rag);
+    row.title = 'Doble clic para editar';
 
-    const phasesHTML = PHASE_STAGES.map(keys =>
-      `<div class="phase-cell">${keys.map(k => stageHTML(k, proj[k] || 'pendiente')).join('')}</div>`
-    ).join('');
+    const plannerBuckets = getPlannerBucketsByProject(proj.name);
+    const phasesHTML = BUCKETS.map((bucket) => {
+      const tasks = plannerBuckets[bucket.key] || [];
+      return `<div class="phase-cell">${bucketCellHTML(bucket.label, tasks)}</div>`;
+    }).join('');
 
     row.innerHTML = `
       <div class="proj-info">
         <div class="proj-name-row">
-          <div class="rag-dot rag-${proj.rag || 'verde'}"></div>
+          <div class="rag-dot rag-${normalizeRag(proj.rag)}"></div>
           <span class="proj-name">${proj.name}</span>
         </div>
         <div class="proj-resp">${proj.responsable || ''}</div>
       </div>
       <div class="phases-grid">${phasesHTML}</div>`;
+    row.addEventListener('dblclick', function() { openMaintainer(idx); });
     container.appendChild(row);
   });
+  refreshMaintainerSelect();
 }
 
 function applyFilter(rag, btn) {
@@ -1031,14 +1763,136 @@ function applyFilter(rag, btn) {
   });
 }
 
+function applyActiveFilter() {
+  const active = document.querySelector('.filter-pill.active');
+  if (active) applyFilter(active.dataset.rag || 'todos', active);
+}
+
+function setMaintainerStatus(message, isError) {
+  const node = document.getElementById('maintainer-status');
+  if (!node) return;
+  node.textContent = message;
+  node.classList.toggle('error', !!isError);
+}
+
+function renderStageEditor() {
+  const grid = document.getElementById('stage-editor-grid');
+  if (!grid || grid.children.length > 0) return;
+
+  STAGE_KEYS.forEach((key) => {
+    const label = document.createElement('label');
+    label.className = 'field-row stage-row';
+
+    const title = document.createElement('span');
+    title.textContent = key.toUpperCase();
+
+    const select = document.createElement('select');
+    select.id = `mp-${key}`;
+
+    STAGE_STATES.forEach((state) => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = `${key.toUpperCase()} - ${state}`;
+      select.appendChild(option);
+    });
+
+    label.appendChild(title);
+    label.appendChild(select);
+    grid.appendChild(label);
+  });
+}
+
+function writeForm(project) {
+  const p = sanitizeProject(project || { name: '', rag: 'verde' });
+  document.getElementById('mp-name').value = p.name || '';
+  document.getElementById('mp-description').value = p.descripcion || '';
+  document.getElementById('mp-responsable').value = p.responsable || '';
+  document.getElementById('mp-rag').value = p.rag || 'verde';
+  STAGE_KEYS.forEach((key) => {
+    document.getElementById(`mp-${key}`).value = p[key] || 'pendiente';
+  });
+}
+
+function readForm() {
+  const project = {
+    name: document.getElementById('mp-name').value,
+    descripcion: document.getElementById('mp-description').value,
+    responsable: document.getElementById('mp-responsable').value,
+    rag: document.getElementById('mp-rag').value
+  };
+
+  STAGE_KEYS.forEach((key) => {
+    project[key] = document.getElementById(`mp-${key}`).value;
+  });
+
+  return sanitizeProject(project);
+}
+
+function refreshMaintainerSelect() {
+  const select = document.getElementById('mp-project-select');
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  const empty = document.createElement('option');
+  empty.value = '-1';
+  empty.textContent = '[Nuevo proyecto]';
+  select.appendChild(empty);
+
+  currentProjects.forEach((project, index) => {
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = project.name;
+    select.appendChild(option);
+  });
+
+  if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
+    select.value = String(selectedProjectIndex);
+    writeForm(currentProjects[selectedProjectIndex]);
+  } else {
+    selectedProjectIndex = -1;
+    select.value = '-1';
+    writeForm({ name: '', rag: 'verde' });
+  }
+}
+
+function saveLocalData(projects) {
+  localStorage.setItem(DATA_KEY, serializeMD(projects));
+}
+
+function downloadMarkdown() {
+  const content = serializeMD(currentProjects);
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'proyectos.md';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 async function loadData() {
   try {
-    const resp = await fetch('proyectos.md?_=' + Date.now());
-    if (!resp.ok) throw new Error('No se pudo cargar proyectos.md (HTTP ' + resp.status + ')');
-    const text = await resp.text();
+    const local = localStorage.getItem(DATA_KEY);
+    const text = local || await (async () => {
+      const resp = await fetch('proyectos.md?_=' + Date.now());
+      if (!resp.ok) throw new Error('No se pudo cargar proyectos.md (HTTP ' + resp.status + ')');
+      return resp.text();
+    })();
+
     const projects = parseMD(text);
     if (!projects.length) throw new Error('No se encontraron proyectos en proyectos.md');
     renderProjects(projects);
+    applyActiveFilter();
+
+    const statusText = local
+      ? 'Datos cargados desde almacenamiento local del navegador.'
+      : 'Datos cargados desde proyectos.md';
+    setMaintainerStatus(statusText, false);
+
+    document.getElementById('error-area').innerHTML = '';
 
     const now = new Date();
     document.getElementById('last-update').textContent =
@@ -1047,13 +1901,232 @@ async function loadData() {
   } catch(e) {
     document.getElementById('error-area').innerHTML =
       `<div class="error-banner">No se pudo cargar el archivo de datos: ${e.message}. Asegúrate de abrir index.html desde un servidor local.</div>`;
+    setMaintainerStatus('No se pudieron cargar datos.', true);
   }
 }
 
-initTheme();
-loadData();
+function openMaintainer(idx) {
+  var panel = document.getElementById('maintainer-panel');
+  if (panel) panel.classList.remove('hidden');
+  renderStageEditor();
+  selectedProjectIndex = (typeof idx === 'number') ? idx : -1;
+  refreshMaintainerSelect();
+  var msg = (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length)
+    ? 'Editando: ' + currentProjects[selectedProjectIndex].name
+    : 'Nuevo proyecto listo para crear.';
+  setMaintainerStatus(msg, false);
+}
+
+function setupMaintainerEvents() {
+  const toggle = document.getElementById('maintainer-toggle');
+  const panel = document.getElementById('maintainer-panel');
+  if (toggle && panel) {
+    toggle.addEventListener('click', () => panel.classList.toggle('hidden'));
+  }
+
+  const mpClose = document.getElementById('mp-close');
+  if (mpClose) {
+    mpClose.addEventListener('click', () => {
+      document.getElementById('maintainer-panel').classList.add('hidden');
+    });
+  }
+
+  document.getElementById('mp-project-select').addEventListener('change', (event) => {
+    selectedProjectIndex = parseInt(event.target.value, 10);
+    if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
+      writeForm(currentProjects[selectedProjectIndex]);
+      setMaintainerStatus(`Editando: ${currentProjects[selectedProjectIndex].name}`, false);
+    } else {
+      selectedProjectIndex = -1;
+      writeForm({ name: '', rag: 'verde' });
+      setMaintainerStatus('Nuevo proyecto listo para crear.', false);
+    }
+  });
+
+  document.getElementById('mp-new').addEventListener('click', () => {
+    selectedProjectIndex = -1;
+    refreshMaintainerSelect();
+    setMaintainerStatus('Nuevo proyecto listo para crear.', false);
+  });
+
+  document.getElementById('mp-cancel').addEventListener('click', () => {
+    refreshMaintainerSelect();
+    setMaintainerStatus('Cambios descartados en formulario.', false);
+  });
+
+  document.getElementById('mp-save').addEventListener('click', () => {
+    const draft = readForm();
+    if (!draft.name) {
+      setMaintainerStatus('El nombre del proyecto es obligatorio.', true);
+      return;
+    }
+
+    const duplicate = currentProjects.some((p, idx) => {
+      if (idx === selectedProjectIndex) return false;
+      return p.name.toLowerCase() === draft.name.toLowerCase();
+    });
+
+    if (duplicate) {
+      setMaintainerStatus('Ya existe otro proyecto con ese nombre.', true);
+      return;
+    }
+
+    const next = currentProjects.slice();
+    if (selectedProjectIndex >= 0 && selectedProjectIndex < next.length) {
+      next[selectedProjectIndex] = draft;
+    } else {
+      next.push(draft);
+    }
+
+    saveLocalData(next);
+    renderProjects(next);
+    applyActiveFilter();
+    selectedProjectIndex = -1;
+    refreshMaintainerSelect();
+    setMaintainerStatus('Proyecto guardado en almacenamiento local.', false);
+    document.getElementById('save-success-dialog').classList.remove('hidden');
+  });
+
+  document.getElementById('mp-success-continue').addEventListener('click', () => {
+    document.getElementById('save-success-dialog').classList.add('hidden');
+  });
+
+  document.getElementById('mp-success-exit').addEventListener('click', () => {
+    document.getElementById('save-success-dialog').classList.add('hidden');
+    document.getElementById('maintainer-panel').classList.add('hidden');
+  });
+
+  document.getElementById('mp-form-reset').addEventListener('click', () => {
+    selectedProjectIndex = -1;
+    refreshMaintainerSelect();
+    setMaintainerStatus('Formulario reiniciado.', false);
+  });
+
+  document.getElementById('mp-delete').addEventListener('click', () => {
+    if (selectedProjectIndex < 0 || selectedProjectIndex >= currentProjects.length) {
+      setMaintainerStatus('Selecciona un proyecto para eliminar.', true);
+      return;
+    }
+
+    const target = currentProjects[selectedProjectIndex];
+    if (!window.confirm(`Se eliminará el proyecto "${target.name}". ¿Deseas continuar?`)) {
+      return;
+    }
+
+    const next = currentProjects.filter((_, index) => index !== selectedProjectIndex);
+    selectedProjectIndex = -1;
+    saveLocalData(next);
+    renderProjects(next);
+    applyActiveFilter();
+    setMaintainerStatus('Proyecto eliminado en almacenamiento local.', false);
+  });
+
+  document.getElementById('mp-export').addEventListener('click', () => {
+    downloadMarkdown();
+    setMaintainerStatus('Archivo proyectos.md exportado.', false);
+  });
+
+  document.getElementById('mp-reset').addEventListener('click', async () => {
+    localStorage.removeItem(DATA_KEY);
+    selectedProjectIndex = -1;
+    await loadData();
+    setMaintainerStatus('Se restauró la data desde proyectos.md.', false);
+  });
+}
+
+function setupGlobalEvents() {
+  document.querySelectorAll('.filter-pill').forEach((button) => {
+    button.addEventListener('click', () => applyFilter(button.dataset.rag || 'todos', button));
+  });
+
+  document.getElementById('refresh-btn').addEventListener('click', () => loadData());
+
+  const tableHead = document.querySelector('.table-head');
+  if (tableHead) {
+    tableHead.addEventListener('dblclick', () => openMaintainer(-1));
+  }
+}
+
+function setTableFullscreen(nextState) {
+  const wrap = document.getElementById('progress-table-wrap');
+  if (!wrap) return;
+
+  isTableFullscreen = !!nextState;
+  document.body.classList.toggle('table-fullscreen', isTableFullscreen);
+  wrap.classList.toggle('fullscreen-mode', isTableFullscreen);
+}
+
+async function exportFullscreenTablePng() {
+  if (!isTableFullscreen) return;
+
+  const target = document.getElementById('progress-table-wrap');
+  const button = document.getElementById('table-export-png');
+  if (!target || !button || !window.html2canvas) return;
+
+  const prevText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Generando...';
+
+  try {
+    const canvas = await window.html2canvas(target, {
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    const now = new Date();
+    const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = `estado-avance-${stamp}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    document.getElementById('error-area').innerHTML = `<div class="error-banner warning">No se pudo exportar PNG: ${error.message}</div>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = prevText;
+  }
+}
+
+function setupTableFullscreenEvents() {
+  const fsOpen = document.getElementById('table-fs-open');
+  const fsExit = document.getElementById('table-fs-exit');
+  const exportPng = document.getElementById('table-export-png');
+
+  if (fsOpen) fsOpen.addEventListener('click', () => setTableFullscreen(true));
+  if (fsExit) fsExit.addEventListener('click', () => setTableFullscreen(false));
+  if (exportPng) exportPng.addEventListener('click', () => exportFullscreenTablePng());
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isTableFullscreen) {
+      setTableFullscreen(false);
+    }
+  });
+}
 
 window.addEventListener('DOMContentLoaded', () => {
+  const loadStart = Date.now();
+  function hideLoader() {
+    const screen = document.getElementById('loading-screen');
+    if (!screen) return;
+    const elapsed = Date.now() - loadStart;
+    const delay = Math.max(0, 1000 - elapsed);
+    setTimeout(function() {
+      screen.classList.add('fade-out');
+      setTimeout(function() { screen.style.display = 'none'; }, 420);
+    }, delay);
+  }
+
+  initTheme();
+  renderStageEditor();
+  setupGlobalEvents();
+  setupTableFullscreenEvents();
+  setupMaintainerEvents();
+  loadData().finally(hideLoader);
+
   if (window.AOS) {
     AOS.init({ duration: 500, once: true, easing: 'ease-out-cubic' });
   }
