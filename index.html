@@ -1583,6 +1583,27 @@ let currentProjects = [];
 let selectedProjectIndex = -1;
 let isTableFullscreen = false;
 let dataProvider = createMarkdownDataProvider([]);
+const DATA_SOURCE_MODES = ['markdown', 'planner'];
+
+/**
+ * @typedef {Object} PlannerTaskModel
+ * @property {string} id
+ * @property {string} title
+ * @property {string} bucketKey
+ * @property {number} percentComplete
+ * @property {'notStarted'|'inProgress'|'completed'} status
+ */
+
+/**
+ * @typedef {Object} PlannerProjectSnapshot
+ * @property {string} planId
+ * @property {string} planTitle
+ * @property {string} groupId
+ * @property {string} projectName
+ * @property {string} rag
+ * @property {Record<string,string>} stages
+ * @property {Record<string, PlannerTaskModel[]>} tasksByBucket
+ */
 
 /**
  * @typedef {Object} DataProvider
@@ -1596,6 +1617,103 @@ let dataProvider = createMarkdownDataProvider([]);
  * @property {(markdownText: string) => ProjectModel[]} importMarkdown
  * @property {() => string} exportMarkdown
  */
+
+/**
+ * @typedef {DataProvider & {
+ *   source: 'planner',
+ *   config: { tenantId?: string, groupId?: string, planId?: string }
+ * }} PlannerDataProviderContract
+ */
+
+/**
+ * Mapeo de diseño ProjectModel -> Planner snapshot.
+ * Sin llamadas Graph: solo transforma estructura para documentar contrato.
+ * @param {Object} project
+ * @param {{ planId?: string, groupId?: string }} [config]
+ * @returns {PlannerProjectSnapshot}
+ */
+function mapProjectModelToPlannerSnapshot(project, config) {
+  const p = sanitizeProject(project || {});
+  const cfg = config || {};
+  const tasksByBucket = {};
+
+  BUCKETS.forEach((bucket) => {
+    const templates = PLANNER_TASK_TEMPLATE[bucket.key] || [];
+    tasksByBucket[bucket.key] = templates.map((title, index) => ({
+      id: `${bucket.key}-${index + 1}`,
+      title,
+      bucketKey: bucket.key,
+      percentComplete: 0,
+      status: 'notStarted'
+    }));
+  });
+
+  const stages = {};
+  STAGE_KEYS.forEach((key) => {
+    stages[key] = p[key];
+  });
+
+  return {
+    planId: cfg.planId || '',
+    planTitle: p.name,
+    groupId: cfg.groupId || '',
+    projectName: p.name,
+    rag: p.rag,
+    stages,
+    tasksByBucket
+  };
+}
+
+/**
+ * Mapeo de diseño Planner snapshot -> ProjectModel.
+ * Se usa para documentar reglas de transformación sin integrar Graph en esta iteración.
+ * @param {PlannerProjectSnapshot} snapshot
+ * @returns {ProjectModel}
+ */
+function mapPlannerSnapshotToProjectModel(snapshot) {
+  const src = snapshot || {};
+  const draft = {
+    name: src.projectName || src.planTitle || '',
+    descripcion: '',
+    responsable: '',
+    rag: src.rag || 'verde'
+  };
+
+  STAGE_KEYS.forEach((key) => {
+    const value = src.stages && src.stages[key] ? src.stages[key] : 'pendiente';
+    draft[key] = value;
+  });
+
+  return sanitizeProject(draft);
+}
+
+/**
+ * Contrato futuro de provider Planner.
+ * Esta función NO implementa Graph ni persistencia remota; expone el shape esperado.
+ * @param {{ tenantId?: string, groupId?: string, planId?: string }} [config]
+ * @returns {PlannerDataProviderContract}
+ */
+function createPlannerDataProviderContract(config) {
+  const notImplemented = () => {
+    throw new Error('PlannerDataProvider no implementado en esta iteracion.');
+  };
+
+  const provider = {
+    source: 'planner',
+    config: config || {},
+    load: notImplemented,
+    setAll: notImplemented,
+    getAll: notImplemented,
+    getMetrics: notImplemented,
+    create: notImplemented,
+    update: notImplemented,
+    remove: notImplemented,
+    importMarkdown: notImplemented,
+    exportMarkdown: notImplemented
+  };
+
+  return provider;
+}
 
 function computeProjectMetrics(projects) {
   const list = Array.isArray(projects) ? projects : [];
