@@ -122,8 +122,11 @@ git checkout -b feature/issue-8-contrato-planner
 
 # 3. Revisar en GitHub (manual)
 
-# 4. Una vez merged, avanzar
+# 4. Una vez merged, EJECUTAR INMEDIATAMENTE este step:
 ./scripts/advance-after-pr-close.ps1 -PullNumber 19
+
+# ⚠️ CRÍTICO: Este step cierra el issue y reporta el siguiente.
+# No saltarlo o el issue quedará abierto indefinidamente y el flujo se rompe.
 
 # Salida: "Siguiente pendiente: issue #10"
 ```

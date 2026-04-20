@@ -215,6 +215,38 @@ Issue #6:
 
 ---
 
+### Patrón 6: PR mergeado sin advance (GAP de Responsabilidad)
+
+**Indicadores**:
+- PR fue mergeado a `develop` (visible en GitHub).
+- Agente detecta que NO se ejecutó `advance-after-pr-close`.
+- Issue linkado sigue abierto.
+- Paso 5 del flujo quedó incompleto.
+
+**Causa típica**:
+- Usuario mergeó PR manualmente en GitHub.
+- Agente no fue notificado automáticamente.
+- El closure del issue nunca sucedió.
+
+**Detección automática**:
+- Chequear status del issue después de mergear PR.
+- Si issue sigue abierto pero PR está merged: disparar acción.
+
+**Sugerencia automática**:
+> "Detecté que PR #22 fue mergeado a `develop` pero el issue #21 sigue abierto. Esto rompe el flujo lógico. Voy a ejecutar el script de cierre automáticamente."
+
+**Acción**:
+```powershell
+./scripts/advance-after-pr-close.ps1 -PullNumber 22
+```
+
+**Validación**:
+- Confirmar issue fue cerrado.
+- Confirmar siguiente issue reportado.
+- Log de ejecución para auditoria.
+
+---
+
 ## Implementación de Nueva Automatización
 
 Cuando el agente detecta oportunidad de automatización:
