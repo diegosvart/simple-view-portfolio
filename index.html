@@ -1684,9 +1684,9 @@ function parseMD(text) {
       const m = line.match(/^(\w+):\s*(.+)/);
       if (m) proj[m[1].trim().toLowerCase()] = m[2].trim();
     });
-    if (name) projects.push(sanitizeProject(proj));
+    if (name) projects.push(proj);
   });
-  return projects;
+  return validateProjectCollectionOrThrow(projects);
 }
 
 /**
@@ -1718,6 +1718,85 @@ function normalizeRag(value) {
 function normalizeStage(value) {
   const v = String(value || '').toLowerCase().trim();
   return STAGE_STATES.includes(v) ? v : 'pendiente';
+}
+
+function normalizeNameKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function collectProjectValidationErrors(project, options) {
+  const cfg = options || {};
+  const errors = [];
+  const name = String((project && project.name) || '').trim();
+  const rag = String((project && project.rag) || '').trim().toLowerCase();
+
+  if (!name) {
+    errors.push('El nombre del proyecto es obligatorio.');
+  }
+
+  if (rag && !RAG_STATES.includes(rag)) {
+    errors.push(`RAG invalido: "${project.rag}".`);
+  }
+
+  STAGE_KEYS.forEach((key) => {
+    const raw = String((project && project[key]) || '').trim().toLowerCase();
+    if (raw && !STAGE_STATES.includes(raw)) {
+      errors.push(`Estado invalido en ${key.toUpperCase()}: "${project[key]}".`);
+    }
+  });
+
+  if (Array.isArray(cfg.existingProjects)) {
+    const currentIndex = Number.isInteger(cfg.currentIndex) ? cfg.currentIndex : -1;
+    const needle = normalizeNameKey(name);
+    const duplicate = cfg.existingProjects.some((item, idx) => {
+      if (idx === currentIndex) return false;
+      return normalizeNameKey(item && item.name) === needle;
+    });
+
+    if (needle && duplicate) {
+      errors.push('Ya existe otro proyecto con ese nombre.');
+    }
+  }
+
+  return errors;
+}
+
+function validateProjectOrThrow(project, options) {
+  const errors = collectProjectValidationErrors(project, options);
+  if (errors.length) {
+    throw new Error(errors.join(' '));
+  }
+  return sanitizeProject(project);
+}
+
+function validateProjectCollectionOrThrow(projects) {
+  const list = Array.isArray(projects) ? projects : [];
+  const errors = [];
+  const nameToIndex = new Map();
+
+  list.forEach((project, index) => {
+    const rowErrors = collectProjectValidationErrors(project);
+    rowErrors.forEach((message) => {
+      errors.push(`Proyecto ${index + 1}: ${message}`);
+    });
+
+    const key = normalizeNameKey(project && project.name);
+    if (!key) return;
+
+    if (nameToIndex.has(key)) {
+      const prev = nameToIndex.get(key) + 1;
+      errors.push(`Proyecto ${index + 1}: nombre duplicado con proyecto ${prev}.`);
+      return;
+    }
+
+    nameToIndex.set(key, index);
+  });
+
+  if (errors.length) {
+    throw new Error(errors.join(' '));
+  }
+
+  return list.map(sanitizeProject);
 }
 
 function serializeMD(projects) {
@@ -1875,7 +1954,7 @@ function readForm() {
     project[key] = document.getElementById(`mp-${key}`).value;
   });
 
-  return sanitizeProject(project);
+  return project;
 }
 
 function refreshMaintainerSelect() {
@@ -2005,19 +2084,14 @@ function setupMaintainerEvents() {
   });
 
   document.getElementById('mp-save').addEventListener('click', () => {
-    const draft = readForm();
-    if (!draft.name) {
-      setMaintainerStatus('El nombre del proyecto es obligatorio.', true);
-      return;
-    }
-
-    const duplicate = currentProjects.some((p, idx) => {
-      if (idx === selectedProjectIndex) return false;
-      return p.name.toLowerCase() === draft.name.toLowerCase();
-    });
-
-    if (duplicate) {
-      setMaintainerStatus('Ya existe otro proyecto con ese nombre.', true);
+    let draft;
+    try {
+      draft = validateProjectOrThrow(readForm(), {
+        existingProjects: currentProjects,
+        currentIndex: selectedProjectIndex
+      });
+    } catch (error) {
+      setMaintainerStatus(error.message, true);
       return;
     }
 
