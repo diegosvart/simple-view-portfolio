@@ -1635,12 +1635,20 @@ function createMarkdownDataProvider(initialProjects) {
 
   const provider = {
     load(markdownText) {
-      state = parseMD(markdownText);
+      try {
+        state = parseMD(markdownText);
+      } catch (error) {
+        throw new Error(`Importacion markdown invalida: ${error.message}`);
+      }
       return provider.getAll();
     },
 
     setAll(projects) {
-      state = validateProjectCollectionOrThrow(projects);
+      try {
+        state = validateProjectCollectionOrThrow(projects);
+      } catch (error) {
+        throw new Error(`Coleccion de proyectos invalida: ${error.message}`);
+      }
       return provider.getAll();
     },
 
@@ -1780,18 +1788,54 @@ function initTheme() {
 }
 
 function parseMD(text) {
+  if (text == null) {
+    throw new Error('No se recibio contenido markdown para importar.');
+  }
+
+  const source = String(text).replace(/\r\n?/g, '\n');
+  const lines = source.split('\n');
   const projects = [];
-  const blocks = text.split(/^## proyecto:/im).slice(1);
-  blocks.forEach(block => {
-    const lines = block.trim().split('\n');
-    const name = lines[0].trim();
-    const proj = { name };
-    lines.slice(1).forEach(line => {
-      const m = line.match(/^(\w+):\s*(.+)/);
-      if (m) proj[m[1].trim().toLowerCase()] = m[2].trim();
-    });
-    if (name) projects.push(proj);
+  let currentProject = null;
+
+  const commitCurrentProject = () => {
+    if (!currentProject) return;
+    projects.push(currentProject);
+    currentProject = null;
+  };
+
+  lines.forEach((rawLine, index) => {
+    const lineNumber = index + 1;
+    const line = rawLine.trim();
+
+    if (!line) return;
+
+    if (/^##\s*proyecto\s*:/i.test(line)) {
+      commitCurrentProject();
+      const name = line.replace(/^##\s*proyecto\s*:/i, '').trim();
+      currentProject = { name };
+      return;
+    }
+
+    if (/^#/.test(line)) {
+      return;
+    }
+
+    if (!currentProject) {
+      return;
+    }
+
+    const kvMatch = line.match(/^([a-zA-Z0-9_]+)\s*:\s*(.*)$/);
+    if (!kvMatch) {
+      throw new Error(`Linea ${lineNumber}: formato invalido. Usa "clave: valor".`);
+    }
+
+    const key = kvMatch[1].trim().toLowerCase();
+    const value = kvMatch[2].trim();
+    currentProject[key] = value;
   });
+
+  commitCurrentProject();
+
   return validateProjectCollectionOrThrow(projects);
 }
 
@@ -1905,6 +1949,19 @@ function validateProjectCollectionOrThrow(projects) {
   return list.map(sanitizeProject);
 }
 
+function toMarkdownScalar(value, fallback) {
+  const clean = String(value == null ? '' : value)
+    .replace(/\r\n?/g, ' ')
+    .replace(/\n/g, ' ')
+    .trim();
+
+  if (!clean) {
+    return fallback;
+  }
+
+  return clean;
+}
+
 function serializeMD(projects) {
   const lines = [
     '# Portafolio TI 2026 — Grupo EBI',
@@ -1915,9 +1972,9 @@ function serializeMD(projects) {
 
   projects.forEach((project) => {
     const p = sanitizeProject(project);
-    lines.push(`## proyecto: ${p.name}`);
-    lines.push(`descripcion: ${p.descripcion || '-'}`);
-    lines.push(`responsable: ${p.responsable || '-'}`);
+    lines.push(`## proyecto: ${toMarkdownScalar(p.name, 'Sin nombre')}`);
+    lines.push(`descripcion: ${toMarkdownScalar(p.descripcion, '-')}`);
+    lines.push(`responsable: ${toMarkdownScalar(p.responsable, '-')}`);
     lines.push(`rag: ${p.rag}`);
     STAGE_KEYS.forEach((key) => lines.push(`${key}: ${p[key] || 'pendiente'}`));
     lines.push('');
