@@ -1971,12 +1971,38 @@ const PortfolioService = {
   },
   
   /**
-   * Inicializar con seed si está vacío
+   * Inicializar con seed si está vacío.
+   * Migración: si hay proyectos sin tareas (datos pre-Etapa 2), backfill con catálogo en 'pend'.
    */
   ensureInitialized() {
     const state = LocalStorageRepository.load();
     if (!state.projects || state.projects.length === 0) {
       seedInitialProjects();
+      return;
+    }
+    // Migración: proyectos sin tareas reciben backfill del catálogo
+    let migrated = false;
+    state.projects.forEach(p => {
+      if (!p.removed && (!p.tasks || p.tasks.length === 0)) {
+        p.tasks = [];
+        PHASES_CATALOG.forEach(phase => {
+          const phaseTasks = TASKS_CATALOG[phase.id] || [];
+          phaseTasks.forEach(taskTemplate => {
+            p.tasks.push({
+              id: generateUUID(),
+              phaseId: phase.id,
+              code: taskTemplate.code,
+              label: taskTemplate.label,
+              status: 'pend',
+              removed: false
+            });
+          });
+        });
+        migrated = true;
+      }
+    });
+    if (migrated) {
+      LocalStorageRepository.save(state);
     }
   }
 };
