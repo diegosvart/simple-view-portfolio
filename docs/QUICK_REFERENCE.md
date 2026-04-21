@@ -4,6 +4,36 @@ Referencia rápida de comandos para ejecutar el flujo de trabajo.
 
 ---
 
+## 0. Inicio de Sesion (obligatorio)
+
+```powershell
+./scripts/load-work-report.ps1 -Owner diegosvart -Repo simple-view-portfolio
+```
+
+Salida esperada:
+- Estado de ramas (local y tracking).
+- Issues abiertos en orden logico.
+- Siguiente tarea sugerida.
+
+---
+
+## 0.5 Validacion Pre-Implementacion (obligatorio)
+
+```powershell
+./scripts/validate-pre-implementation.ps1 -BaseBranch develop
+```
+
+Si necesitas diagnostico sin bloqueo:
+```powershell
+./scripts/validate-pre-implementation.ps1 -BaseBranch develop -DryRun
+```
+
+Si necesitas excepcion controlada por cambios locales:
+```powershell
+./scripts/validate-pre-implementation.ps1 -BaseBranch develop -AllowDirty
+```
+
+
 ## 1. Crear Issue desde Contexto
 
 ```powershell
@@ -97,6 +127,22 @@ PR #X mergeado.
 Issue #Y cerrado.
 Siguiente pendiente: issue #Z
 ```
+
+---
+
+## 6. Cierre de Sesion (memoria local)
+
+```powershell
+./scripts/close-session.ps1 `
+  -Owner diegosvart `
+  -Repo simple-view-portfolio `
+  -SessionSummary "Resumen corto de la sesion"
+```
+
+Salida esperada:
+- Actualiza `docs/LAST_SESSION_MEMORY.md`.
+- Deja resumen breve de trabajo realizado.
+- Informa siguiente issue sugerido por roadmap.
 
 ---
 
@@ -194,6 +240,16 @@ git checkout -b feature/issue-8-contrato-planner
 ## Información Útil
 
 **Roadmap de issues**: 3, 4, 5, 6, 8, 10, 9, 7, 13, 12, 14, 11, 20
+
+**Nueva tarea agregada**: Seguridad Git para prevenir comandos dañinos (incluye bloqueo operativo de `git init` en repos clonado y validaciones previas obligatorias)
+
+**Checklist obligatorio antes de trabajar**:
+- `git rev-parse --is-inside-work-tree`
+- `git remote -v`
+- `git branch -a`
+- `git status -sb`
+
+**Regla de detención**: Si ves `No commits yet` o no existe `origin/develop`, detener ejecución y no aplicar cambios.
 
 **Base branch**: `develop` (no main)
 
