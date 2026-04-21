@@ -2581,6 +2581,16 @@ function setupMaintainerEvents() {
 
   const refreshDirtyState = () => {
     const current = sanitizeProject(readForm());
+    const liveErrors = collectProjectValidationErrors(current, {
+      existingProjects: currentProjects,
+      currentIndex: selectedProjectIndex
+    });
+
+    if (liveErrors.length > 0) {
+      setMaintainerStatus(liveErrors[0], true);
+      return;
+    }
+
     if (projectModelsEqual(current, baselineProject)) {
       setMaintainerStatus('Sin cambios en formulario.', false);
       return;
