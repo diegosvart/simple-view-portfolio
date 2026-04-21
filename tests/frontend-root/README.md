@@ -8,6 +8,18 @@ This folder contains the initial automated test harness for the root frontend (`
 npm run test:frontend-root
 ```
 
+## Automated vs Manual
+
+- Automated tests (sin navegador):
+```powershell
+npm run test:frontend-root
+```
+
+- Prueba interactiva del frontend root (con autorecarga):
+```powershell
+npm run dev
+```
+
 ## Current coverage
 
 - Smoke checks for root frontend anchors in `index.html`.
