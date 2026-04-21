@@ -1668,14 +1668,13 @@ const DATA_SOURCE_MODES = ['markdown', 'planner'];
 /**
  * @typedef {Object} DataProvider
  * @property {(markdownText: string) => ProjectModel[]} load
- * @property {(projects: Object[]) => ProjectModel[]} setAll
- * @property {() => ProjectModel[]} getAll
+ * @property {(source?: string|Object[]) => ProjectModel[]} reset
+ * @property {() => ProjectModel[]} refresh
  * @property {() => { total: number, completado: number, enCurso: number, bloqueado: number }} getMetrics
  * @property {(project: Object) => ProjectModel} create
  * @property {(index: number, project: Object) => ProjectModel} update
  * @property {(index: number) => ProjectModel} remove
- * @property {(markdownText: string) => ProjectModel[]} importMarkdown
- * @property {() => string} exportMarkdown
+ * @property {() => string} export
  */
 
 /**
@@ -1810,27 +1809,48 @@ function computeProjectMetrics(projects) {
  */
 function createMarkdownDataProvider(initialProjects) {
   let state = [];
+  let baseline = [];
 
   const provider = {
     load(markdownText) {
+      let parsed;
       try {
-        state = parseMD(markdownText);
+        parsed = parseMD(markdownText);
       } catch (error) {
         throw new Error(`Importacion markdown invalida: ${error.message}`);
       }
-      return provider.getAll();
+
+      baseline = parsed.map((project) => ({ ...project }));
+      state = parsed.map((project) => ({ ...project }));
+      return provider.refresh();
     },
 
-    setAll(projects) {
+    reset(source) {
+      if (typeof source === 'undefined') {
+        state = baseline.map((project) => ({ ...project }));
+        return provider.refresh();
+      }
+
+      if (typeof source === 'string') {
+        return provider.load(source);
+      }
+
+      if (!Array.isArray(source)) {
+        throw new Error('Reset invalido: se esperaba markdown, arreglo o sin parametros.');
+      }
+
+      let next;
       try {
-        state = validateProjectCollectionOrThrow(projects);
+        next = validateProjectCollectionOrThrow(source);
       } catch (error) {
         throw new Error(`Coleccion de proyectos invalida: ${error.message}`);
       }
-      return provider.getAll();
+
+      state = next.map((project) => ({ ...project }));
+      return provider.refresh();
     },
 
-    getAll() {
+    refresh() {
       return state.map((project) => ({ ...project }));
     },
 
@@ -1862,16 +1882,28 @@ function createMarkdownDataProvider(initialProjects) {
       return { ...removed };
     },
 
+    export() {
+      return serializeMD(state);
+    },
+
+    setAll(projects) {
+      return provider.reset(projects);
+    },
+
+    getAll() {
+      return provider.refresh();
+    },
+
     importMarkdown(markdownText) {
       return provider.load(markdownText);
     },
 
     exportMarkdown() {
-      return serializeMD(state);
+      return provider.export();
     }
   };
 
-  provider.setAll(Array.isArray(initialProjects) ? initialProjects : []);
+  provider.reset(Array.isArray(initialProjects) ? initialProjects : []);
   return provider;
 }
 
@@ -2178,8 +2210,8 @@ function stageHTML(key, state) {
 }
 
 function renderProjects(projects) {
-  dataProvider.setAll(projects);
-  currentProjects = dataProvider.getAll();
+  dataProvider.reset(projects);
+  currentProjects = dataProvider.refresh();
   const container = document.getElementById('proj-rows');
   container.innerHTML = '';
 
@@ -2362,13 +2394,13 @@ function refreshMaintainerSelect() {
 }
 
 function saveLocalData(projects) {
-  dataProvider.setAll(projects);
-  localStorage.setItem(DATA_KEY, dataProvider.exportMarkdown());
+  dataProvider.reset(projects);
+  localStorage.setItem(DATA_KEY, dataProvider.export());
 }
 
 function downloadMarkdown() {
-  dataProvider.setAll(currentProjects);
-  const content = dataProvider.exportMarkdown();
+  dataProvider.reset(currentProjects);
+  const content = dataProvider.export();
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -2464,13 +2496,13 @@ function setupMaintainerEvents() {
   document.getElementById('mp-save').addEventListener('click', () => {
     let next;
     try {
-      dataProvider.setAll(currentProjects);
+      dataProvider.reset(currentProjects);
       if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
         dataProvider.update(selectedProjectIndex, readForm());
       } else {
         dataProvider.create(readForm());
       }
-      next = dataProvider.getAll();
+      next = dataProvider.refresh();
     } catch (error) {
       setMaintainerStatus(error.message, true);
       return;
@@ -2513,9 +2545,9 @@ function setupMaintainerEvents() {
 
     let next;
     try {
-      dataProvider.setAll(currentProjects);
+      dataProvider.reset(currentProjects);
       dataProvider.remove(selectedProjectIndex);
-      next = dataProvider.getAll();
+      next = dataProvider.refresh();
     } catch (error) {
       setMaintainerStatus(error.message, true);
       return;
