@@ -9,6 +9,10 @@ param(
 
   [int[]]$IssueSequence = @(3, 4, 5, 6, 8, 10, 9, 7, 13, 12, 14, 11, 20, 23),
 
+  [switch]$AutoNormalizeBaseBranch,
+
+  [switch]$AllowDirtyClose,
+
   [string]$SessionSummary = '',
 
   [string]$OutputFile = 'docs/LAST_SESSION_MEMORY.md'
@@ -48,6 +52,77 @@ if ($insideRepo -ne 'true') {
 $dateIso = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
 $currentBranch = ((Invoke-Git 'rev-parse --abbrev-ref HEAD') -join '').Trim()
 $statusShort = (Invoke-Git 'status -sb') -join "`n"
+$allBranches = (Invoke-Git 'branch -a') -join "`n"
+$hasOriginBase = $allBranches -match "remotes/origin/$BaseBranch"
+$statusLines = @($statusShort -split "`n")
+$isDirty = $statusLines.Count -gt 1
+
+$closeGuardrailNotes = @()
+$closeGuardrailBlocked = $false
+
+if (-not $hasOriginBase) {
+  $closeGuardrailBlocked = $true
+  $closeGuardrailNotes += "No se encontro remotes/origin/$BaseBranch."
+}
+
+if ($currentBranch -ne $BaseBranch) {
+  $closeGuardrailNotes += "Rama actual '$currentBranch' no coincide con '$BaseBranch'."
+
+  if (-not $AutoNormalizeBaseBranch) {
+    $closeGuardrailBlocked = $true
+    $closeGuardrailNotes += "Para cerrar sesion en estado valido, ejecuta: git checkout $BaseBranch; git pull origin $BaseBranch"
+    $closeGuardrailNotes += 'O reintenta con -AutoNormalizeBaseBranch para normalizacion automatica guiada.'
+  } else {
+    if ($isDirty -and -not $AllowDirtyClose) {
+      $closeGuardrailBlocked = $true
+      $closeGuardrailNotes += 'Hay cambios locales. No se normaliza automaticamente sin permiso explicito.'
+      $closeGuardrailNotes += 'Haz commit/stash o usa -AllowDirtyClose de forma excepcional.'
+    } else {
+      if ($isDirty -and $AllowDirtyClose) {
+        $closeGuardrailNotes += 'Normalizacion solicitada con -AllowDirtyClose (modo excepcional).'
+      }
+
+      [void](Invoke-Git "checkout $BaseBranch")
+      if ($LASTEXITCODE -ne 0) {
+        $closeGuardrailBlocked = $true
+        $closeGuardrailNotes += "No se pudo hacer checkout a $BaseBranch."
+      } else {
+        [void](Invoke-Git "pull origin $BaseBranch")
+        if ($LASTEXITCODE -ne 0) {
+          $closeGuardrailBlocked = $true
+          $closeGuardrailNotes += "No se pudo actualizar $BaseBranch desde origin."
+        } else {
+          $currentBranch = ((Invoke-Git 'rev-parse --abbrev-ref HEAD') -join '').Trim()
+          $statusShort = (Invoke-Git 'status -sb') -join "`n"
+          $statusLines = @($statusShort -split "`n")
+          $isDirty = $statusLines.Count -gt 1
+          $closeGuardrailNotes += "Normalizacion completada en '$BaseBranch'."
+        }
+      }
+    }
+  }
+}
+
+if ($isDirty -and -not $AllowDirtyClose) {
+  $closeGuardrailBlocked = $true
+  $closeGuardrailNotes += 'Arbol de trabajo sucio: el cierre exige estado limpio por defecto.'
+  $closeGuardrailNotes += 'Haz commit/stash antes de cerrar o usa -AllowDirtyClose de forma excepcional.'
+}
+
+if ($currentBranch -ne $BaseBranch) {
+  $closeGuardrailBlocked = $true
+}
+
+if ($closeGuardrailBlocked) {
+  Write-Output '=== Guardrails de cierre ==='
+  foreach ($note in ($closeGuardrailNotes | Select-Object -Unique)) {
+    Write-Output "- $note"
+  }
+  Write-Output ''
+  Write-Output 'Resultado: BLOQUEADO. Cierre no persistido hasta normalizar estado en develop.'
+  exit 1
+}
+
 $changedFilesRaw = (Invoke-Git 'status --porcelain')
 $changedFiles = @()
 foreach ($line in $changedFilesRaw) {
@@ -98,6 +173,15 @@ $lines += "- Fecha: $dateIso"
 $lines += "- Repositorio: $Owner/$Repo"
 $lines += "- Rama activa: $currentBranch"
 $lines += "- Base esperada: $BaseBranch"
+$lines += ''
+$lines += '## Guardrails de cierre'
+if ($closeGuardrailNotes.Count -eq 0) {
+  $lines += '- OK: cierre ejecutado en estado normalizado sobre la rama base.'
+} else {
+  foreach ($note in ($closeGuardrailNotes | Select-Object -Unique)) {
+    $lines += "- $note"
+  }
+}
 $lines += ''
 $lines += '## Resumen pequeno'
 $lines += "- $SessionSummary"

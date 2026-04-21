@@ -7,6 +7,10 @@ param(
 
   [string]$BaseBranch = 'develop',
 
+  [switch]$AutoNormalizeBaseBranch,
+
+  [switch]$AllowDirtyNormalize,
+
   [int[]]$IssueSequence = @(3, 4, 5, 6, 8, 10, 9, 7, 13, 12, 14, 11, 20, 23)
 )
 
@@ -39,6 +43,49 @@ $statusShort = (Invoke-Git 'status -sb') -join "`n"
 $currentBranch = ((Invoke-Git 'rev-parse --abbrev-ref HEAD') -join '').Trim()
 $remoteInfo = (Invoke-Git 'remote -v') -join "`n"
 $branchesTracking = (Invoke-Git 'branch -vv') -join "`n"
+
+$startupGuardrailNotes = @()
+$startupGuardrailBlocked = $false
+
+if ($currentBranch -ne $BaseBranch) {
+  $startupGuardrailNotes += "Rama actual '$currentBranch' no coincide con base esperada '$BaseBranch'."
+
+  $statusLines = @($statusShort -split "`n")
+  $isDirty = $statusLines.Count -gt 1
+
+  if (-not $AutoNormalizeBaseBranch) {
+    $startupGuardrailBlocked = $true
+    $startupGuardrailNotes += "Normaliza estado con: git checkout $BaseBranch; git pull origin $BaseBranch"
+    $startupGuardrailNotes += "O reintenta este script con -AutoNormalizeBaseBranch para correccion automatica guiada."
+  } else {
+    if ($isDirty -and -not $AllowDirtyNormalize) {
+      $startupGuardrailBlocked = $true
+      $startupGuardrailNotes += 'Hay cambios locales. No se puede cambiar de rama automaticamente sin confirmacion explicita.'
+      $startupGuardrailNotes += 'Haz commit/stash o usa -AllowDirtyNormalize bajo tu responsabilidad para intentar normalizar.'
+    } else {
+      if ($isDirty -and $AllowDirtyNormalize) {
+        $startupGuardrailNotes += 'Normalizacion solicitada con -AllowDirtyNormalize (modo excepcional).'
+      }
+
+      [void](Invoke-Git "checkout $BaseBranch")
+      if ($LASTEXITCODE -ne 0) {
+        $startupGuardrailBlocked = $true
+        $startupGuardrailNotes += "No se pudo hacer checkout a $BaseBranch."
+      } else {
+        [void](Invoke-Git "pull origin $BaseBranch")
+        if ($LASTEXITCODE -ne 0) {
+          $startupGuardrailBlocked = $true
+          $startupGuardrailNotes += "No se pudo actualizar $BaseBranch desde origin."
+        } else {
+          $currentBranch = ((Invoke-Git 'rev-parse --abbrev-ref HEAD') -join '').Trim()
+          $statusShort = (Invoke-Git 'status -sb') -join "`n"
+          $branchesTracking = (Invoke-Git 'branch -vv') -join "`n"
+          $startupGuardrailNotes += "Normalizacion completada en '$BaseBranch'."
+        }
+      }
+    }
+  }
+}
 
 $hasOriginDevelop = $false
 if ($remoteInfo -match 'origin') {
@@ -114,6 +161,16 @@ Write-Output '[Ramas locales (tracking)]'
 Write-Output $branchesTracking
 Write-Output ''
 
+Write-Output '[Guardrails de inicio]'
+if ($startupGuardrailNotes.Count -eq 0) {
+  Write-Output '- OK: Sesion iniciada sobre la rama base esperada.'
+} else {
+  foreach ($note in $startupGuardrailNotes) {
+    Write-Output "- $note"
+  }
+}
+Write-Output ''
+
 if ($gitSafetyWarnings.Count -gt 0) {
   Write-Output '[Alertas de seguridad Git]'
   foreach ($warn in $gitSafetyWarnings) {
@@ -150,3 +207,12 @@ if ($suggestedTasks.Count -eq 0) {
     Write-Output "- $task"
   }
 }
+
+if ($startupGuardrailBlocked) {
+  Write-Output ''
+  Write-Output 'Resultado: BLOQUEADO. Corrige/normaliza el estado Git y reintenta para iniciar sesion correctamente.'
+  exit 1
+}
+
+Write-Output ''
+Write-Output 'Resultado: OK. Sesion lista para continuar.'
