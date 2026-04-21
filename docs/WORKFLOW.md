@@ -9,6 +9,11 @@ Este documento describe cómo transformamos requerimientos en issues del reposit
 - **Automatización**: El agente sugiere y ejecuta automatizaciones mediante skills.
 - **Trazabilidad**: Cada cambio es rastreable desde requerimiento → issue → PR → merge.
 
+## Estado Actual de Automatizaciones
+
+- Implementadas en esta rama: `load-work-report.ps1`, `validate-pre-implementation.ps1`, `close-session.ps1`, `advance-after-pr-close.ps1`.
+- Si un script documentado no existe localmente, usar el fallback manual equivalente con `gh` y actualizar la documentación antes de continuar.
+
 ---
 
 ## Fase 0: Inicio de Sesion (Bootstrap)
@@ -75,6 +80,8 @@ Antes de crear rama o editar codigo, ejecutar una validacion obligatoria de prec
 **Skill**: `create-issue-from-context`
 
 **Script**: `scripts/create-issue-from-context.ps1`
+
+**Estado en esta rama**: pendiente de implementación. Si no existe el script localmente, crear issue manual con `gh issue create` siguiendo la misma plantilla.
 
 **Entrada**: Contexto en lenguaje natural
 
@@ -165,6 +172,8 @@ git diff
 
 **Script**: `scripts/create-pr.ps1`
 
+**Estado en esta rama**: pendiente de implementación. Si no existe el script localmente, usar `git push` + `gh pr create` con `Closes #<numero>` en el body.
+
 **Propósito**: Crear un PR consistente contra `develop` que auto-linkee el issue.
 
 **Ejemplo**:
@@ -188,6 +197,10 @@ git diff
 6. Crea PR con base `develop`.
 7. Auto-linquea el issue (`Closes #<número>` en PR body).
 8. Asigna el PR (opcional).
+
+**Regla de completitud del ciclo**:
+- Entregar URL de PR NO completa el ciclo.
+- El ciclo se considera completo solo cuando: PR mergeado en `develop` + issue cerrado + siguiente issue reportado.
 
 **Opciones disponibles**:
 - `-DryRun`: Simular sin crear nada.
@@ -285,7 +298,7 @@ Si terminaste en una feature branch, normaliza automaticamente antes de cerrar:
 - Guardrail de cierre: la memoria solo se persiste si el estado final queda valido en `develop`.
 
 **Siguiente tarea sugerida vigente**:
-- Issue #8: S2-I5 | Definir contrato futuro PlannerDataProvider (sin Graph).
+- Se determina en tiempo real con `./scripts/load-work-report.ps1` segun `IssueSequence`.
 
 ---
 

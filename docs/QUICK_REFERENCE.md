@@ -42,6 +42,8 @@ Si necesitas excepcion controlada por cambios locales:
 
 ## 1. Crear Issue desde Contexto
 
+> Nota: si `scripts/create-issue-from-context.ps1` no existe en tu copia local, usar `gh issue create` con la plantilla del workflow.
+
 ```powershell
 ./scripts/create-issue-from-context.ps1 `
   -Context "Descripción del trabajo" `
@@ -81,6 +83,8 @@ git diff
 
 ## 3. Crear PR
 
+> Nota: si `scripts/create-pr.ps1` no existe en tu copia local, usar flujo manual: `git push -u origin <branch>` + `gh pr create --base develop --head <branch> --body "...\n\nCloses #<n>"`.
+
 ```powershell
 ./scripts/create-pr.ps1 `
   -IssueNumber <NUMBER> `
@@ -107,7 +111,7 @@ git diff
 
 **Revisar manualmente en GitHub**: https://github.com/diegosvart/simple-view-portfolio/pulls
 
-**Una vez approved y merged**, continuar con paso 5.
+**Una vez approved y merged**, continuar con paso 5 (obligatorio para cerrar ciclo).
 
 ---
 
@@ -133,6 +137,10 @@ PR #X mergeado.
 Issue #Y cerrado.
 Siguiente pendiente: issue #Z
 ```
+
+**Regla de completitud**:
+- El ciclo NO se considera completo al crear PR.
+- El ciclo termina solo cuando este paso confirma issue cerrado y siguiente pendiente.
 
 ---
 
