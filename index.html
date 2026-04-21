@@ -2304,32 +2304,19 @@ function stageHTML(key, state) {
     </div>`;
 }
 
-function renderProjects(projects) {
-  dataProvider.reset(projects);
-  currentProjects = dataProvider.refresh();
-  maintainerController.setProjects(currentProjects);
-  const container = document.getElementById('proj-rows');
-  container.innerHTML = '';
+function buildProjectRowElement(proj, idx) {
+  const row = document.createElement('div');
+  row.className = 'proj-row';
+  row.dataset.rag = normalizeRag(proj.rag);
+  row.title = 'Doble clic para editar';
 
-  const metrics = dataProvider.getMetrics();
-  document.getElementById('m-total').textContent = metrics.total;
-  document.getElementById('m-completado').textContent = metrics.completado;
-  document.getElementById('m-encurso').textContent = metrics.enCurso;
-  document.getElementById('m-bloqueado').textContent = metrics.bloqueado;
+  const plannerBuckets = getPlannerBucketsByProject(proj.name);
+  const phasesHTML = BUCKETS.map((bucket) => {
+    const tasks = plannerBuckets[bucket.key] || [];
+    return `<div class="phase-cell">${bucketCellHTML(bucket.label, tasks)}</div>`;
+  }).join('');
 
-  currentProjects.forEach((proj, idx) => {
-    const row = document.createElement('div');
-    row.className = 'proj-row';
-    row.dataset.rag = normalizeRag(proj.rag);
-    row.title = 'Doble clic para editar';
-
-    const plannerBuckets = getPlannerBucketsByProject(proj.name);
-    const phasesHTML = BUCKETS.map((bucket) => {
-      const tasks = plannerBuckets[bucket.key] || [];
-      return `<div class="phase-cell">${bucketCellHTML(bucket.label, tasks)}</div>`;
-    }).join('');
-
-    row.innerHTML = `
+  row.innerHTML = `
       <div class="proj-info">
         <div class="proj-name-row">
           <div class="rag-dot rag-${normalizeRag(proj.rag)}"></div>
@@ -2338,8 +2325,28 @@ function renderProjects(projects) {
         <div class="proj-resp">${proj.responsable || ''}</div>
       </div>
       <div class="phases-grid">${phasesHTML}</div>`;
-    row.addEventListener('dblclick', function() { openMaintainer(idx); });
-    container.appendChild(row);
+  row.addEventListener('dblclick', function() { openMaintainer(idx); });
+  return row;
+}
+
+function updateMetricsDisplay(metrics) {
+  document.getElementById('m-total').textContent = metrics.total;
+  document.getElementById('m-completado').textContent = metrics.completado;
+  document.getElementById('m-encurso').textContent = metrics.enCurso;
+  document.getElementById('m-bloqueado').textContent = metrics.bloqueado;
+}
+
+function renderProjects(projects) {
+  dataProvider.reset(projects);
+  currentProjects = dataProvider.refresh();
+  maintainerController.setProjects(currentProjects);
+  const container = document.getElementById('proj-rows');
+  container.innerHTML = '';
+
+  updateMetricsDisplay(dataProvider.getMetrics());
+
+  currentProjects.forEach((proj, idx) => {
+    container.appendChild(buildProjectRowElement(proj, idx));
   });
   refreshMaintainerSelect();
 }
