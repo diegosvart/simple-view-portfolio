@@ -10,6 +10,7 @@ test('root frontend entrypoint exists and includes maintainer anchors', () => {
   const html = fs.readFileSync(filePath, 'utf8');
 
   assert.ok(html.includes('id="maintainer-panel"'), 'maintainer panel anchor is required');
+  assert.ok(html.includes('id="maintainer-ux-state"'), 'maintainer UX state badge anchor is required');
   assert.ok(html.includes('id="mp-save"'), 'save button anchor is required');
   assert.ok(html.includes('id="proj-rows"'), 'project rows container is required');
 });
