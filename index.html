@@ -1636,7 +1636,18 @@ const BUCKETS = [
 ];
 
 /**
- * LocalStorageRepository — Persistencia en localStorage
+ * UUID generator — Generar IDs únicos
+ */
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
+ * LocalStorageRepository — Persistencia en localStorage con CRUD completo
  * @type {Object}
  */
 const LocalStorageRepository = {
@@ -1658,21 +1669,179 @@ const LocalStorageRepository = {
     } catch (e) {
       console.error('Error saving portfolio to localStorage:', e);
     }
+  },
+  
+  /**
+   * Obtener proyecto por ID
+   */
+  getProjectById(id) {
+    const state = this.load();
+    return (state.projects || []).find(p => p.id === id);
+  },
+  
+  /**
+   * Crear nuevo proyecto
+   */
+  createProject(project) {
+    const state = this.load();
+    const newProject = {
+      id: generateUUID(),
+      name: (project.name || '').trim(),
+      leader: (project.leader || '').trim(),
+      sponsor: (project.sponsor || '').trim(),
+      rag: project.rag || 'verde',
+      tasks: project.tasks || [],
+      removed: false
+    };
+    state.projects = state.projects || [];
+    state.projects.push(newProject);
+    this.save(state);
+    return newProject;
+  },
+  
+  /**
+   * Actualizar proyecto existente
+   */
+  updateProject(id, updates) {
+    const state = this.load();
+    const idx = (state.projects || []).findIndex(p => p.id === id);
+    if (idx < 0) return null;
+    
+    const project = state.projects[idx];
+    Object.assign(project, updates);
+    this.save(state);
+    return project;
+  },
+  
+  /**
+   * Remover proyecto (soft delete)
+   */
+  removeProject(id) {
+    return this.updateProject(id, { removed: true });
+  },
+  
+  /**
+   * Agregar o actualizar tarea en proyecto
+   */
+  upsertTask(projectId, taskData) {
+    const state = this.load();
+    const project = (state.projects || []).find(p => p.id === projectId);
+    if (!project) return null;
+    
+    project.tasks = project.tasks || [];
+    const existingIdx = project.tasks.findIndex(t => t.id === taskData.id);
+    
+    if (existingIdx >= 0) {
+      Object.assign(project.tasks[existingIdx], taskData);
+    } else {
+      project.tasks.push({
+        id: generateUUID(),
+        ...taskData
+      });
+    }
+    
+    this.save(state);
+    return project;
+  },
+  
+  /**
+   * Remover tarea (soft delete)
+   */
+  removeTask(projectId, taskId) {
+    const state = this.load();
+    const project = (state.projects || []).find(p => p.id === projectId);
+    if (!project) return null;
+    
+    const task = (project.tasks || []).find(t => t.id === taskId);
+    if (task) {
+      task.removed = true;
+    }
+    
+    this.save(state);
+    return project;
   }
 };
 
 /**
- * PortfolioService — Servicios de negocio para proyectos
+ * Crear 7 proyectos iniciales de seed
+ */
+function seedInitialProjects() {
+  const projects = [
+    {
+      name: 'Portal Interno RH',
+      leader: 'Ana García',
+      sponsor: 'Director de RRHH'
+    },
+    {
+      name: 'Migración Cloud Infrastructure',
+      leader: 'Carlos López',
+      sponsor: 'CTO'
+    },
+    {
+      name: 'Modernización Backend APIs',
+      leader: 'María Rodríguez',
+      sponsor: 'VP Engineering'
+    },
+    {
+      name: 'Dashboard Ejecutivo BI',
+      leader: 'Diego Martínez',
+      sponsor: 'Director de Operaciones'
+    },
+    {
+      name: 'Integración SAP Finance',
+      leader: 'Patricia Sánchez',
+      sponsor: 'CFO'
+    },
+    {
+      name: 'Mobile App Cliente',
+      leader: 'Roberto Fernández',
+      sponsor: 'Director de Producto'
+    },
+    {
+      name: 'Seguridad Infraestructura IT',
+      leader: 'Laura Gómez',
+      sponsor: 'Director de Seguridad'
+    }
+  ];
+
+  projects.forEach(proj => {
+    const newProj = {
+      ...proj,
+      rag: 'verde',
+      tasks: []
+    };
+
+    // Pre-cargar todas las tareas del catálogo en estado 'pend'
+    PHASES_CATALOG.forEach(phase => {
+      const phaseTasks = TASKS_CATALOG[phase.id] || [];
+      phaseTasks.forEach(taskTemplate => {
+        newProj.tasks.push({
+          id: generateUUID(),
+          phaseId: phase.id,
+          code: taskTemplate.code,
+          label: taskTemplate.label,
+          status: 'pend',
+          removed: false
+        });
+      });
+    });
+
+    LocalStorageRepository.createProject(newProj);
+  });
+}
+
+/**
+ * PortfolioService — Servicios de negocio para proyectos con CRUD completo
  * @type {Object}
  */
 const PortfolioService = {
   /**
-   * Obtener lista de proyectos
+   * Obtener lista de proyectos activos
    * @returns {Object[]}
    */
   getProjects() {
     const state = LocalStorageRepository.load();
-    return state.projects || [];
+    return (state.projects || []).filter(p => !p.removed);
   },
   
   /**
@@ -1701,6 +1870,106 @@ const PortfolioService = {
         pct: total ? Math.round((done * 100) / total) : 0
       }
     };
+  },
+  
+  /**
+   * Crear nuevo proyecto
+   */
+  createProject(name, leader, sponsor) {
+    const project = {
+      name,
+      leader: leader || '',
+      sponsor: sponsor || '',
+      rag: 'verde',
+      tasks: []
+    };
+    
+    // Pre-cargar todas las tareas del catálogo
+    PHASES_CATALOG.forEach(phase => {
+      const phaseTasks = TASKS_CATALOG[phase.id] || [];
+      phaseTasks.forEach(taskTemplate => {
+        project.tasks.push({
+          id: generateUUID(),
+          phaseId: phase.id,
+          code: taskTemplate.code,
+          label: taskTemplate.label,
+          status: 'pend',
+          removed: false
+        });
+      });
+    });
+    
+    return LocalStorageRepository.createProject(project);
+  },
+  
+  /**
+   * Actualizar metadatos del proyecto
+   */
+  updateProject(id, updates) {
+    const project = LocalStorageRepository.getProjectById(id);
+    if (!project) return null;
+    
+    const safeUpdates = {
+      name: updates.name !== undefined ? updates.name : project.name,
+      leader: updates.leader !== undefined ? updates.leader : project.leader,
+      sponsor: updates.sponsor !== undefined ? updates.sponsor : project.sponsor,
+      rag: updates.rag !== undefined ? updates.rag : project.rag
+    };
+    
+    return LocalStorageRepository.updateProject(id, safeUpdates);
+  },
+  
+  /**
+   * Remover proyecto
+   */
+  removeProject(id) {
+    return LocalStorageRepository.removeProject(id);
+  },
+  
+  /**
+   * Agregar tarea al proyecto
+   */
+  addTask(projectId, phaseId, code, label) {
+    return LocalStorageRepository.upsertTask(projectId, {
+      phaseId,
+      code,
+      label,
+      status: 'pend',
+      removed: false
+    });
+  },
+  
+  /**
+   * Remover tarea del proyecto
+   */
+  removeTask(projectId, taskId) {
+    return LocalStorageRepository.removeTask(projectId, taskId);
+  },
+  
+  /**
+   * Toggle estado de tarea (ok ↔ pend)
+   */
+  toggleTaskStatus(projectId, taskId) {
+    const state = LocalStorageRepository.load();
+    const project = (state.projects || []).find(p => p.id === projectId);
+    if (!project) return null;
+    
+    const task = (project.tasks || []).find(t => t.id === taskId);
+    if (!task) return null;
+    
+    task.status = task.status === 'ok' ? 'pend' : 'ok';
+    LocalStorageRepository.save(state);
+    return project;
+  },
+  
+  /**
+   * Inicializar con seed si está vacío
+   */
+  ensureInitialized() {
+    const state = LocalStorageRepository.load();
+    if (!state.projects || state.projects.length === 0) {
+      seedInitialProjects();
+    }
   }
 };
 let currentProjects = [];
@@ -2622,6 +2891,9 @@ async function loadDataCore() {
 
 async function loadData() {
   try {
+    // Etapa 2: Inicializar seed si localStorage está vacío
+    PortfolioService.ensureInitialized();
+    
     await maintainerController.runCriticalOperation('refresh', async () => {
       await loadDataCore();
     });
