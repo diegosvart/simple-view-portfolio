@@ -37,6 +37,7 @@ test('index.html wires form sync functions: writeForm, readForm, refreshMaintain
   assert.ok(html.includes('function writeForm('), 'writeForm must be a named standalone function');
   assert.ok(html.includes('function readForm('), 'readForm must be a named standalone function');
   assert.ok(html.includes('function refreshMaintainerSelect('), 'refreshMaintainerSelect must be a named standalone function');
+  assert.ok(html.includes('startNewDraft({ system: true })'), 'internal refresh sync must use system selection bypass');
 });
 
 test('index.html includes DATA_SOURCE_MODE flag and createDataProvider factory', () => {

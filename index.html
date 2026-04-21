@@ -2493,7 +2493,9 @@ function refreshMaintainerSelect() {
     select.value = String(selectedProjectIndex);
     writeForm(currentProjects[selectedProjectIndex]);
   } else {
-    const snapshot = maintainerController.startNewDraft();
+    // Esta sincronizacion es interna de UI (no accion directa del usuario),
+    // por eso evita el bloqueo de seleccion durante operaciones criticas.
+    const snapshot = maintainerController.startNewDraft({ system: true });
     selectedProjectIndex = snapshot.selectedIndex;
     select.value = '-1';
     writeForm(snapshot.draft);
@@ -2545,8 +2547,11 @@ async function loadDataCore() {
       'Actualizado ' + now.toLocaleDateString('es-CL', {day:'numeric', month:'short'}) +
       ' ' + now.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
   } catch(e) {
+    const serverHint = /Failed to fetch|NetworkError|No se pudo cargar proyectos\.md|CORS|ERR_/i.test(String(e && e.message || ''))
+      ? ' Asegurate de abrir index.html desde un servidor local.'
+      : '';
     document.getElementById('error-area').innerHTML =
-      `<div class="error-banner">No se pudo cargar el archivo de datos: ${e.message}. Asegúrate de abrir index.html desde un servidor local.</div>`;
+      `<div class="error-banner">No se pudo cargar el archivo de datos: ${e.message}.${serverHint}</div>`;
     setMaintainerStatus('No se pudieron cargar datos.', true);
   }
 }
