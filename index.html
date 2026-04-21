@@ -2374,6 +2374,23 @@ function getPlannerBucketsByProject(projectName) {
   return buckets;
 }
 
+/**
+ * Etapa 3: Get tasks by phase from project, organized by status
+ */
+function getPhaseTasksByProject(project) {
+  const byPhase = {};
+  PHASES_CATALOG.forEach(phase => {
+    const phaseTasks = (project.tasks || []).filter(t => t.phaseId === phase.id && !t.removed);
+    byPhase[phase.id] = {
+      all: phaseTasks,
+      completado: phaseTasks.filter(t => t.status === 'ok').length,
+      pendiente: phaseTasks.filter(t => t.status === 'pend').length,
+      bloqueado: phaseTasks.filter(t => t.status === 'bloq').length
+    };
+  });
+  return byPhase;
+}
+
 function summarizeBucket(tasks) {
   const list = Array.isArray(tasks) ? tasks : [];
   const total = list.length;
@@ -2384,6 +2401,18 @@ function summarizeBucket(tasks) {
 
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
   return { total, completed, percent };
+}
+
+/**
+ * Etapa 3: Summarize phase tasks by status
+ */
+function summarizePhase(phaseData) {
+  const total = phaseData.all.length;
+  const completado = phaseData.completado;
+  const pendiente = phaseData.pendiente;
+  const bloqueado = phaseData.bloqueado;
+  const percent = total > 0 ? Math.round((completado * 100) / total) : 0;
+  return { total, completado, pendiente, bloqueado, percent };
 }
 
 function getBucketLevel(summary) {
@@ -2407,6 +2436,37 @@ function bucketCellHTML(bucketLabel, tasks) {
       <div class="bucket-tooltip"><strong>${bucketLabel}</strong><br>${summary.completed}/${summary.total} tareas completadas<br>${summary.percent}% de cumplimiento<br><br>${tooltipLines}</div>
     </div>`;
 }
+
+/**
+ * Etapa 3: HTML para celda de fase con nuevo formato Completado/Pendiente/Bloqueado
+ */
+function phaseCellHTML(phaseLabel, phaseData) {
+  const summary = summarizePhase(phaseData);
+  const levelClass = getBucketLevel(summary);
+  const taskDetails = summary.total
+    ? phaseData.all.map(task => {
+        const statusLabel = task.status === 'ok' ? 'Completado' 
+                          : task.status === 'bloq' ? 'Bloqueado'
+                          : 'Pendiente';
+        return `${statusLabel}: ${task.code} - ${task.label}`;
+      }).join('<br>')
+    : 'Sin tareas asignadas';
+
+  return `
+    <div class="bucket-progress-wrap">
+      <div class="bucket-progress-bubble ${levelClass}">${summary.percent}%</div>
+      <div class="bucket-tooltip">
+        <strong>${phaseLabel}</strong><br>
+        <span style="color: #4caf50;">✓ Completado: ${summary.completado}</span><br>
+        <span style="color: #ff9800;">○ Pendiente: ${summary.pendiente}</span><br>
+        <span style="color: #f44336;">✕ Bloqueado: ${summary.bloqueado}</span><br>
+        Total: ${summary.total}<br>
+        <br>
+        ${taskDetails}
+      </div>
+    </div>`;
+}
+
 
 function setTheme(theme) {
   const nextTheme = theme === 'dark' ? 'dark' : 'light';
@@ -2643,10 +2703,11 @@ function buildProjectRowElement(proj, idx) {
   row.dataset.rag = normalizeRag(proj.rag);
   row.title = 'Doble clic para editar';
 
-  const plannerBuckets = getPlannerBucketsByProject(proj.name);
-  const phasesHTML = BUCKETS.map((bucket) => {
-    const tasks = plannerBuckets[bucket.key] || [];
-    return `<div class="phase-cell">${bucketCellHTML(bucket.label, tasks)}</div>`;
+  // Etapa 3: Use real project tasks instead of fake data
+  const phaseData = getPhaseTasksByProject(proj);
+  const phasesHTML = PHASES_CATALOG.map((phase) => {
+    const data = phaseData[phase.id] || { all: [], completado: 0, pendiente: 0, bloqueado: 0 };
+    return `<div class="phase-cell">${phaseCellHTML(phase.label, data)}</div>`;
   }).join('');
 
   row.innerHTML = `
@@ -2655,7 +2716,7 @@ function buildProjectRowElement(proj, idx) {
           <div class="rag-dot rag-${normalizeRag(proj.rag)}"></div>
           <span class="proj-name">${proj.name}</span>
         </div>
-        <div class="proj-resp">${proj.responsable || ''}</div>
+        <div class="proj-resp">${proj.leader || ''}</div>
       </div>
       <div class="phases-grid">${phasesHTML}</div>`;
   row.addEventListener('dblclick', function() { openMaintainer(idx); });
