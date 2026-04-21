@@ -80,11 +80,44 @@ function validateProjectOrThrow(project, options) {
   return sanitizeProject(project);
 }
 
+function validateProjectCollectionOrThrow(projects) {
+  const list = Array.isArray(projects) ? projects : [];
+  const errors = [];
+  const nameToIndex = new Map();
+
+  list.forEach((project, index) => {
+    const rowErrors = collectProjectValidationErrors(project);
+    rowErrors.forEach((message) => {
+      errors.push(`Proyecto ${index + 1}: ${message}`);
+    });
+
+    const key = normalizeNameKey(project && project.name);
+    if (!key) {
+      return;
+    }
+
+    if (nameToIndex.has(key)) {
+      const previous = nameToIndex.get(key) + 1;
+      errors.push(`Proyecto ${index + 1}: nombre duplicado con proyecto ${previous}.`);
+      return;
+    }
+
+    nameToIndex.set(key, index);
+  });
+
+  if (errors.length) {
+    throw new Error(errors.join(' '));
+  }
+
+  return list.map(sanitizeProject);
+}
+
 module.exports = {
   normalizeRag,
   normalizeStage,
   normalizeNameKey,
   sanitizeProject,
   collectProjectValidationErrors,
-  validateProjectOrThrow
+  validateProjectOrThrow,
+  validateProjectCollectionOrThrow
 };

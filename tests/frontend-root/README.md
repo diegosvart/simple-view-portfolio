@@ -12,6 +12,9 @@ npm run test:frontend-root
 
 - Smoke checks for root frontend anchors in `index.html`.
 - Pure-function unit tests for markdown scalar normalization.
+- Round-trip parsing/serialization tests for markdown project format.
+- Invalid-input parsing tests.
+- Compatibility test against current `proyectos.md`.
 - Pure-function unit tests for constants/validation normalization and duplicate detection.
 
 ## Extracted pure modules
@@ -21,6 +24,5 @@ npm run test:frontend-root
 
 ## Next test targets
 
-- Parsing/serialization round-trip tests.
 - Metrics aggregation tests.
 - Maintainer UX state transition tests.
