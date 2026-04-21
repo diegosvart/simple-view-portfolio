@@ -24,10 +24,16 @@ Al iniciar una sesion nueva, ejecutar primero el bootstrap para cargar contexto 
 ./scripts/load-work-report.ps1 -Owner diegosvart -Repo simple-view-portfolio
 ```
 
+Si no estas en `develop`, normaliza automaticamente en el bootstrap:
+```powershell
+./scripts/load-work-report.ps1 -Owner diegosvart -Repo simple-view-portfolio -AutoNormalizeBaseBranch
+```
+
 **Resultado esperado**:
 - Estado actual de ramas.
 - Issues pendientes ordenados por roadmap.
 - Siguiente tarea sugerida por orden logico.
+- Guardrail de inicio: sesion valida solo cuando queda normalizada sobre `develop`.
 
 ---
 
@@ -54,6 +60,9 @@ Antes de crear rama o editar codigo, ejecutar una validacion obligatoria de prec
 ```powershell
 ./scripts/validate-pre-implementation.ps1 -BaseBranch develop -AllowDirty -DryRun
 ```
+
+**Nota de consistencia**:
+- Si el bootstrap detecta desvio de rama, normaliza con `-AutoNormalizeBaseBranch` y luego revalida con este step.
 
 ---
 
@@ -260,10 +269,23 @@ Al terminar la sesion, registrar una memoria breve para continuidad inmediata.
   -SessionSummary "Resumen corto de lo realizado en la sesion"
 ```
 
+Si terminaste en una feature branch, normaliza automaticamente antes de cerrar:
+```powershell
+./scripts/close-session.ps1 `
+  -Owner diegosvart `
+  -Repo simple-view-portfolio `
+  -SessionSummary "Resumen corto de lo realizado en la sesion" `
+  -AutoNormalizeBaseBranch
+```
+
 **Salida esperada**:
 - Archivo `docs/LAST_SESSION_MEMORY.md` actualizado.
 - Resumen pequeno y legible de la sesion.
 - Siguiente issue sugerido por orden logico.
+- Guardrail de cierre: la memoria solo se persiste si el estado final queda valido en `develop`.
+
+**Siguiente tarea sugerida vigente**:
+- Issue #8: S2-I5 | Definir contrato futuro PlannerDataProvider (sin Graph).
 
 ---
 

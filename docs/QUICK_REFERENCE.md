@@ -10,10 +10,16 @@ Referencia rápida de comandos para ejecutar el flujo de trabajo.
 ./scripts/load-work-report.ps1 -Owner diegosvart -Repo simple-view-portfolio
 ```
 
+Si no estas en `develop`, normalizar en el mismo paso:
+```powershell
+./scripts/load-work-report.ps1 -Owner diegosvart -Repo simple-view-portfolio -AutoNormalizeBaseBranch
+```
+
 Salida esperada:
 - Estado de ramas (local y tracking).
 - Issues abiertos en orden logico.
 - Siguiente tarea sugerida.
+- Guardrail de inicio validado sobre `develop`.
 
 ---
 
@@ -139,10 +145,20 @@ Siguiente pendiente: issue #Z
   -SessionSummary "Resumen corto de la sesion"
 ```
 
+Si cierras desde una feature branch:
+```powershell
+./scripts/close-session.ps1 `
+  -Owner diegosvart `
+  -Repo simple-view-portfolio `
+  -SessionSummary "Resumen corto de la sesion" `
+  -AutoNormalizeBaseBranch
+```
+
 Salida esperada:
 - Actualiza `docs/LAST_SESSION_MEMORY.md`.
 - Deja resumen breve de trabajo realizado.
 - Informa siguiente issue sugerido por roadmap.
+- Si no logra normalizar a `develop`, el cierre se bloquea y no persiste memoria.
 
 ---
 
@@ -198,6 +214,8 @@ git checkout -b feature/issue-8-contrato-planner
 | "PR not merged" | PR aún abierto o closed sin mergear | Mergear primero |
 | "Branch not found" | Rama no está en origin | `git push -u origin <branch>` |
 | "Closes #X not in body" | PR body no tiene linkeo | `gh pr edit <number> --body "...Closes #X"` |
+| "Resultado: BLOQUEADO" en bootstrap | No estás en `develop` y no se normalizó | Reintentar con `-AutoNormalizeBaseBranch` o ejecutar checkout/pull manual |
+| "Resultado: BLOQUEADO" en cierre | Estado final no válido para cierre | Normalizar a `develop`, limpiar árbol y reejecutar `close-session.ps1` |
 
 ---
 
@@ -240,6 +258,8 @@ git checkout -b feature/issue-8-contrato-planner
 ## Información Útil
 
 **Roadmap de issues**: 3, 4, 5, 6, 8, 10, 9, 7, 13, 12, 14, 11, 20
+
+**Siguiente tarea sugerida actual**: issue #8 (S2-I5 | Definir contrato futuro PlannerDataProvider sin Graph)
 
 **Nueva tarea agregada**: Seguridad Git para prevenir comandos dañinos (incluye bloqueo operativo de `git init` en repos clonado y validaciones previas obligatorias)
 

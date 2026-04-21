@@ -54,7 +54,7 @@ Add-Check -Name "Existe remotes/origin/$BaseBranch" -Ok $hasOriginDevelop -Hint 
 
 $currentBranch = ((Invoke-Git 'rev-parse --abbrev-ref HEAD') -join '').Trim()
 $onExpectedBranch = ($currentBranch -eq $BaseBranch)
-Add-Check -Name "Rama actual es $BaseBranch" -Ok $onExpectedBranch -Hint "Cambiar con git checkout $BaseBranch."
+Add-Check -Name "Rama actual es $BaseBranch" -Ok $onExpectedBranch -Hint "Cambiar con git checkout $BaseBranch o reejecutar bootstrap con -AutoNormalizeBaseBranch."
 
 $statusShort = (Invoke-Git 'status -sb') -join "`n"
 $isDirty = $statusShort -match '^[\s]*##' -and ($statusShort -split "`n").Count -gt 1

@@ -17,6 +17,24 @@ El agente debe:
 
 ## Automatizaciones Actuales
 
+### 0. Session Guardrails (Inicio y Cierre)
+
+**Problema que resuelve**: Evitar sesiones que inician o terminan en una rama no controlada.
+
+**Antes**: Inicio y cierre permitian continuar fuera de `develop` con mensajes informativos.
+
+**Ahora**: El flujo exige estado final valido en `develop`, con correccion guiada opcional automatica.
+
+**Ubicacion**:
+- Script inicio: `scripts/load-work-report.ps1`
+- Script cierre: `scripts/close-session.ps1`
+
+**Automatizacion incluida**:
+- Detectar desvio de rama base al inicio y al cierre.
+- Proponer normalizacion (`checkout` + `pull`) o ejecutarla con `-AutoNormalizeBaseBranch`.
+- Bloquear resultado final si no se alcanza estado valido de sesion.
+- Mantener continuidad del roadmap (incluyendo issue #8 como siguiente sugerido vigente).
+
 ### 1. Create Issue From Context
 
 **Problema que resuelve**: Convertir requerimientos informales en issues estructurados.
