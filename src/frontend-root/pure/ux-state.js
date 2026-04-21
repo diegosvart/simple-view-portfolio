@@ -1,3 +1,5 @@
+const { STAGE_KEYS } = require('./constants');
+
 const UX_STATE_LABELS = {
   clean: 'Limpio',
   dirty: 'Con cambios pendientes',
@@ -28,7 +30,24 @@ function deriveMaintainerUxState(message, isError) {
   return 'clean';
 }
 
+function projectModelsEqual(left, right) {
+  const a = left || {};
+  const b = right || {};
+
+  if (String(a.name || '').trim() !== String(b.name || '').trim()) return false;
+  if (String(a.descripcion || '').trim() !== String(b.descripcion || '').trim()) return false;
+  if (String(a.responsable || '').trim() !== String(b.responsable || '').trim()) return false;
+  if (String(a.rag || '').trim().toLowerCase() !== String(b.rag || '').trim().toLowerCase()) return false;
+
+  return STAGE_KEYS.every((stageKey) => {
+    const leftValue = String(a[stageKey] || '').trim().toLowerCase();
+    const rightValue = String(b[stageKey] || '').trim().toLowerCase();
+    return leftValue === rightValue;
+  });
+}
+
 module.exports = {
   UX_STATE_LABELS,
-  deriveMaintainerUxState
+  deriveMaintainerUxState,
+  projectModelsEqual
 };
