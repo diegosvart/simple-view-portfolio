@@ -2748,7 +2748,7 @@ function setupMaintainerEvents() {
 
   document.getElementById('mp-export').addEventListener('click', () => {
     downloadMarkdown();
-    setMaintainerStatus('Archivo proyectos.md exportado.', false);
+    setMaintainerStatus('proyectos.md exportado. Reemplaza manualmente el archivo en el repositorio para persistir los cambios.', false);
   });
 
   document.getElementById('mp-reset').addEventListener('click', async () => {
