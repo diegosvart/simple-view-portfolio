@@ -158,7 +158,7 @@ El PR se mergea a `develop`:
 
 ## Fase 5: Cierre de Issue y Avance del Roadmap
 
-### 5.1 Automatizar cierre y avance
+### 5.1 Automatizar cierre y avance (OBLIGATORIO DESPUÉS DE MERGEAR)
 
 **Skill**: `advance-after-pr-close`
 
@@ -168,6 +168,16 @@ El PR se mergea a `develop`:
 1. Detectar que un PR fue merged.
 2. Cerrar el issue linkado.
 3. Reportar el siguiente issue en la roadmap.
+
+⚠️ **RESPONSABILIDAD CRÍTICA**: Este step DEBE ejecutarse siempre después de mergear un PR, independientemente de quién lo mergee.
+
+**Si el usuario mergeó la PR manualmente en GitHub**:
+El agente debe detectarlo y ejecutar automáticamente:
+```powershell
+./scripts/advance-after-pr-close.ps1 -PullNumber <PR_NUMBER>
+```
+
+**Consecuencia de saltarse este step**: El issue quedará abierto permanentemente, rompiendo la lógica del flujo.
 
 **Ejemplo**:
 ```powershell
@@ -348,6 +358,34 @@ Closes #<NUMBER>
 ```
 
 El `Closes #<NUMBER>` es **obligatorio** para que el skill `advance-after-pr-close` funcione.
+
+---
+
+## Reglas de Oro del Flujo
+
+Estas reglas son **no negociables**:
+
+1. **Nunca mergear sin advance**: Si mergeas un PR, DEBES ejecutar `advance-after-pr-close` para cerrar el issue.
+   - Sin esto, el issue queda abierto y el flujo se rompe.
+   - El siguiente paso no puede comenzar.
+
+2. **1 Issue = 1 PR**: No mezcles trabajo de múltiples issues en un solo PR.
+   - Facilita el review.
+   - Mantiene trazabilidad clara.
+   - Simplifica rollbacks si es necesario.
+
+3. **Base siempre develop**: Los PRs van SIEMPRE a `develop`, nunca a `main`.
+   - `main` es solo para releases consolidadas.
+   - `develop` es la rama de integración.
+
+4. **PR body tiene Closes #X**: Es OBLIGATORIO para que `advance-after-pr-close` funcione.
+   - Sin esto, el script no puede linkear issue a PR.
+   - El issue no se cierra automáticamente.
+
+5. **Sequence importa**: Los issues deben ejecutarse en orden lógico (roadmap).
+   - No saltarse issues.
+   - Facilita planificación y priorización.
+   - Evita dependencias ocultas.
 
 ---
 
