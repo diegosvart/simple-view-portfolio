@@ -11,6 +11,52 @@ Este documento describe cómo transformamos requerimientos en issues del reposit
 
 ---
 
+## Fase 0: Inicio de Sesion (Bootstrap)
+
+Al iniciar una sesion nueva, ejecutar primero el bootstrap para cargar contexto real del repo.
+
+**Skill**: `session-bootstrap`
+
+**Skill complementaria**: `work-current-status-report`
+
+**Comando recomendado**:
+```powershell
+./scripts/load-work-report.ps1 -Owner diegosvart -Repo simple-view-portfolio
+```
+
+**Resultado esperado**:
+- Estado actual de ramas.
+- Issues pendientes ordenados por roadmap.
+- Siguiente tarea sugerida por orden logico.
+
+---
+
+## Fase 0.5: Validacion Pre-Implementacion
+
+Antes de crear rama o editar codigo, ejecutar una validacion obligatoria de precondiciones.
+
+**Skill**: `pre-implementation-validation`
+
+**Comando recomendado**:
+```powershell
+./scripts/validate-pre-implementation.ps1 -BaseBranch develop
+```
+
+**Bloqueos que detecta**:
+- No estas en `develop`.
+- Falta `origin/develop`.
+- Arbol de trabajo sucio sin aprobacion explicita.
+- Conflictos de merge.
+- `develop` no sincronizada con upstream.
+- GH CLI no autenticado.
+
+**Uso excepcional**:
+```powershell
+./scripts/validate-pre-implementation.ps1 -BaseBranch develop -AllowDirty -DryRun
+```
+
+---
+
 ## Fase 1: Transformar Requerimientos en Issues
 
 ### 1.1 Crear Issue desde Contexto
@@ -59,6 +105,7 @@ Fase 1: #3, #4, #5, #6
 Fase 2: #8, #10, #9, #7
 Fase 3: #13, #12, #14, #11
 Meta: #20 (buenas prácticas)
+Meta siguiente: Tarea de seguridad Git (bloquear comandos dañinos)
 ```
 
 Este orden se persiste en:
@@ -196,6 +243,27 @@ El agente debe detectarlo y ejecutar automáticamente:
 ```powershell
 ./scripts/advance-after-pr-close.ps1
 ```
+
+---
+
+## Fase 6: Cierre de Sesion (Memoria Local)
+
+Al terminar la sesion, registrar una memoria breve para continuidad inmediata.
+
+**Skill**: `session-close-memory`
+
+**Comando recomendado**:
+```powershell
+./scripts/close-session.ps1 `
+  -Owner diegosvart `
+  -Repo simple-view-portfolio `
+  -SessionSummary "Resumen corto de lo realizado en la sesion"
+```
+
+**Salida esperada**:
+- Archivo `docs/LAST_SESSION_MEMORY.md` actualizado.
+- Resumen pequeno y legible de la sesion.
+- Siguiente issue sugerido por orden logico.
 
 ---
 
@@ -386,6 +454,14 @@ Estas reglas son **no negociables**:
    - No saltarse issues.
    - Facilita planificación y priorización.
    - Evita dependencias ocultas.
+
+6. **Nunca reinicializar repos clonados**: Está prohibido ejecutar `git init` dentro de un repositorio ya clonado.
+  - Antes de trabajar, ejecutar checklist mínimo:
+    - `git rev-parse --is-inside-work-tree`
+    - `git remote -v`
+    - `git branch -a`
+    - `git status -sb`
+  - Si aparece `No commits yet` o falta `origin/develop`, detenerse y escalar.
 
 ---
 

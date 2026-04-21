@@ -247,6 +247,33 @@ Issue #6:
 
 ---
 
+### Patrón 7: Comandos Git dañinos o fuera de contexto
+
+**Objetivo**:
+- Evitar acciones que puedan corromper el estado de trabajo local (por ejemplo, reinicializar historial en un repo ya clonado).
+
+**Indicadores**:
+- Se intenta ejecutar `git init` dentro de un directorio que ya contiene `.git`.
+- El estado de repositorio muestra señales incompatibles con un clon esperado (`No commits yet`, ausencia de `origin/develop`).
+
+**Detección automática**:
+- Ejecutar checklist previo obligatorio:
+  - `git rev-parse --is-inside-work-tree`
+  - `git remote -v`
+  - `git branch -a`
+  - `git status -sb`
+- Si el resultado no cumple criterios mínimos, abortar flujo y solicitar confirmación explícita del usuario.
+
+**Sugerencia automática**:
+> "Detecté una condición de riesgo en Git (estado inconsistente del repositorio o comando potencialmente dañino). Voy a detener ejecución y proponer recuperación segura antes de continuar."
+
+**Acción**:
+- Bloquear comandos potencialmente dañinos hasta validar estado.
+- Proponer recuperación no destructiva o reclonado limpio según contexto.
+- Registrar incidente en documentación operativa para prevención futura.
+
+---
+
 ## Implementación de Nueva Automatización
 
 Cuando el agente detecta oportunidad de automatización:
