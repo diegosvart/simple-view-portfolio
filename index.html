@@ -1567,25 +1567,66 @@
 const THEME_KEY = 'pm-report-theme';
 const DATA_KEY = 'pm-report-projects-markdown';
 
-const STAGE_LABELS = {
-  e1:  'Etapa 1 — Ficha de Proyecto',
-  e2:  'Etapa 2 — Aprobación de Sponsor',
-  e3:  'Etapa 3 — Requerimientos Funcionales',
-  e4:  'Etapa 4 — Requerimientos Técnicos',
-  e5:  'Etapa 5 — Cotización y Proveedor',
-  e6:  'Etapa 6 — Kick Off',
-  e7:  'Etapa 7 — Iteración y Seguimiento',
-  e8:  'Etapa 8 — Pruebas',
-  e9:  'Etapa 9 — Marcha Blanca',
-  e10: 'Etapa 10 — Entrega y Cierre Formal'
+/** Catálogo canónico de fases (5 phases) */
+const PHASES_CATALOG = [
+  { id: 'definicion',     order: 1, label: 'Definición' },
+  { id: 'diseno',         order: 2, label: 'Diseño' },
+  { id: 'ejecucion',      order: 3, label: 'Ejecución' },
+  { id: 'implementacion', order: 4, label: 'Implementación' },
+  { id: 'cierre',         order: 5, label: 'Cierre' }
+];
+
+/** Catálogo canónico de tareas por fase */
+const TASKS_CATALOG = {
+  definicion: [
+    { code: '1.1', label: 'Coordinación ficha de proyecto' },
+    { code: '1.2', label: 'Completar FDP' },
+    { code: '1.3', label: 'Análisis FDP' },
+    { code: '1.4', label: 'Iteración FDP' },
+    { code: '1.5', label: 'Aprobación de Sponsor' }
+  ],
+  diseno: [
+    { code: '2.1',  label: 'Coordinación especificación funcional de requerimientos' },
+    { code: '2.2',  label: 'Completar EFR' },
+    { code: '2.3',  label: 'Análisis EFR' },
+    { code: '2.4',  label: 'Iteración EFR' },
+    { code: '2.5',  label: 'Aprobación Lider de proyecto' },
+    { code: '2.6',  label: 'Coordinación especificación de requerimientos técnicos' },
+    { code: '2.7',  label: 'Completar ERT' },
+    { code: '2.8',  label: 'Análisis ERT' },
+    { code: '2.9',  label: 'Iteración ERT' },
+    { code: '2.10', label: 'Aprobación Lider de proyecto' },
+    { code: '2.11', label: 'Aprobación de Sponsor' },
+    { code: '2.12', label: 'Envío a cotización' },
+    { code: '2.13', label: 'Respuestas dudas y consultas proveedores' },
+    { code: '2.14', label: 'Análisis y selección de proveedor' },
+    { code: '2.15', label: 'Coordinación Kick Off' }
+  ],
+  ejecucion: [
+    { code: '3.1', label: 'Solicitud planificación proyecto' },
+    { code: '3.2', label: 'Análisis de planificación' },
+    { code: '3.3', label: 'Reunión Kick Off' },
+    { code: '3.4', label: 'Reuniones de seguimiento' },
+    { code: '3.5', label: 'Definición plan de pruebas' },
+    { code: '3.6', label: 'Ejecución plan de pruebas' }
+  ],
+  implementacion: [
+    { code: '4.1', label: 'Reunión definición marcha blanca' },
+    { code: '4.2', label: 'Preparación de ambiente productivo' },
+    { code: '4.3', label: 'Certificación' },
+    { code: '4.4', label: 'Roll Out' }
+  ],
+  cierre: [
+    { code: '5.1', label: 'Periodo de garantía' },
+    { code: '5.2', label: 'Retro alimentación del proyecto' },
+    { code: '5.3', label: 'Cierre formal del proyecto' }
+  ]
 };
 
-const STAGE_KEYS = Object.keys(STAGE_LABELS);
 /** @type {StageValue[]} Catálogo canónico de estados de etapa */
 const STAGE_STATES = ['completado', 'en-curso', 'pendiente', 'bloqueado'];
 /** @type {RagValue[]} Catálogo canónico de valores RAG (ambar sin tilde es el valor de código) */
 const RAG_STATES = ['verde', 'ambar', 'rojo'];
-const PHASE_STAGES = [['e1','e2'], ['e3','e4','e5'], ['e6','e7','e8','e9'], ['e10']];
 const BUCKETS = [
   { key: 'definicion', label: 'Definición' },
   { key: 'diseno', label: 'Diseño' },
@@ -1594,50 +1635,73 @@ const BUCKETS = [
   { key: 'cierre', label: 'Cierre' }
 ];
 
-const PLANNER_TASK_TEMPLATE = {
-  definicion: [
-    '1.1 Coordinación ficha de proyecto',
-    '1.2 Completar FDP',
-    '1.3 Análisis FDP',
-    '1.4 Iteración FDP',
-    '1.5 Aprobación de Sponsor'
-  ],
-  diseno: [
-    '2.1 Coordinación especificación funcional de requerimientos',
-    '2.2 Completar EFR',
-    '2.3 Análisis EFR',
-    '2.4 Iteración EFR',
-    '2.5 Aprobación Lider de proyecto',
-    '2.6 Coordinación especificación de requerimientos técnicos',
-    '2.7 Completar ERT',
-    '2.8 Análisis ERT',
-    '2.9 Iteración ERT',
-    '2.10 Aprobación Lider de proyecto',
-    '2.11 Aprobación de Sponsor',
-    '2.12 Envío a cotización',
-    '2.13 Respuestas dudas y consultas proveedores',
-    '2.14 Análisis y selección de proveedor',
-    '2.15 Coordinación Kick Off'
-  ],
-  ejecucion: [
-    '3.1 Solicitud planificación proyecto',
-    '3.2 Análisis de planificación',
-    '3.3 Reunión Kick Off',
-    '3.4 Reuniones de seguimiento',
-    '3.5 Definición plan de pruebas',
-    '3.6 Ejecución plan de pruebas'
-  ],
-  implementacion: [
-    '4.1 Reunión definición marcha blanca',
-    '4.2 Preparación de ambiente productivo',
-    '4.3 Certificación',
-    '4.4 Roll Out'
-  ],
-  cierre: [
-    '5.1 Periodo de garantía',
-    '5.2 Retro alimentación del proyecto',
-    '5.3 Cierre formal del proyecto'
-  ]
+/**
+ * LocalStorageRepository — Persistencia en localStorage
+ * @type {Object}
+ */
+const LocalStorageRepository = {
+  STORAGE_KEY: 'portfolio.v1',
+  
+  load() {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY);
+      return data ? JSON.parse(data) : { projects: [] };
+    } catch (e) {
+      console.error('Error loading portfolio from localStorage:', e);
+      return { projects: [] };
+    }
+  },
+  
+  save(state) {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error('Error saving portfolio to localStorage:', e);
+    }
+  }
+};
+
+/**
+ * PortfolioService — Servicios de negocio para proyectos
+ * @type {Object}
+ */
+const PortfolioService = {
+  /**
+   * Obtener lista de proyectos
+   * @returns {Object[]}
+   */
+  getProjects() {
+    const state = LocalStorageRepository.load();
+    return state.projects || [];
+  },
+  
+  /**
+   * Calcular indicadores de avance del proyecto
+   * @param {Object} project
+   * @returns {Object}
+   */
+  computeProgress(project) {
+    const byPhase = {};
+    PHASES_CATALOG.forEach(phase => {
+      const tasks = (project.tasks || []).filter(t => t.phaseId === phase.id && !t.removed);
+      const done = tasks.filter(t => t.status === 'ok').length;
+      byPhase[phase.id] = {
+        total: tasks.length,
+        done,
+        pct: tasks.length ? Math.round((done * 100) / tasks.length) : 0
+      };
+    });
+    const total = (project.tasks || []).filter(t => !t.removed).length;
+    const done = (project.tasks || []).filter(t => !t.removed && t.status === 'ok').length;
+    return {
+      byPhase,
+      overall: {
+        total,
+        done,
+        pct: total ? Math.round((done * 100) / total) : 0
+      }
+    };
+  }
 };
 let currentProjects = [];
 let selectedProjectIndex = -1;
