@@ -1,5 +1,11 @@
 # spfx-mi-sitio-html
 
+> Estado actual: DEPRECADO.
+>
+> Este proyecto SPFx quedo archivado como experimento de migracion y ya no es la superficie frontend canonica del repositorio.
+> El frontend activo y verificable se encuentra en `index.html` en la raiz del repo.
+> Ver decision arquitectonica: `docs/decisions/ADR-0001-deprecate-spfx.md`.
+
 ## Summary
 
 Migracion inicial del sitio estatico a un WebPart SPFx (sin framework UI) en `m365/spfx`.
@@ -33,6 +39,7 @@ El WebPart carga el template, inicializa eventos (`addEventListener`) y renderiz
 - Gulp CLI opcional para ejecucion global
 
 > Nota: en este entorno se detecto Node 24, por lo que `npm install` falla al compilar `node-sass`.
+> Este stack se considera legado y no debe recibir nuevas features salvo una reactivacion explicita.
 
 ## Solution
 
