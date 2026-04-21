@@ -17,13 +17,15 @@ npm run test:frontend-root
 - Compatibility test against current `proyectos.md`.
 - Pure-function unit tests for constants/validation normalization and duplicate detection.
 - Pure-function unit tests for metrics aggregation and bucket level thresholds.
+- Pure-function unit tests for maintainer UX state transitions.
 
 ## Extracted pure modules
 
 - `src/frontend-root/pure/constants.js`
 - `src/frontend-root/pure/validation.js`
 - `src/frontend-root/pure/metrics.js`
+- `src/frontend-root/pure/ux-state.js`
 
 ## Next test targets
 
-- Maintainer UX state transition tests.
+- Provider contract tests (load/create/update/remove/export/reset/refresh).

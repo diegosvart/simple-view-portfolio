@@ -317,6 +317,19 @@
     gap: 12px;
   }
 
+  .maintainer-panel[data-ux-state='dirty'] {
+    border-color: rgba(186, 117, 23, 0.45);
+  }
+
+  .maintainer-panel[data-ux-state='validation-error'],
+  .maintainer-panel[data-ux-state='import-conflict'] {
+    border-color: rgba(226, 75, 74, 0.5);
+  }
+
+  .maintainer-panel[data-ux-state='saved'] {
+    border-color: rgba(29, 158, 117, 0.5);
+  }
+
   .maintainer-panel.hidden {
     display: none;
   }
@@ -405,6 +418,50 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+  }
+
+  .maintainer-status-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-ux-state {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border-md);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    background: var(--surface2);
+    font-weight: 600;
+  }
+
+  .maintainer-ux-state[data-ux-state='clean'] {
+    color: var(--text-2);
+  }
+
+  .maintainer-ux-state[data-ux-state='dirty'] {
+    color: var(--amber-text);
+    border-color: rgba(186, 117, 23, 0.35);
+    background: var(--amber-bg);
+  }
+
+  .maintainer-ux-state[data-ux-state='validation-error'],
+  .maintainer-ux-state[data-ux-state='import-conflict'] {
+    color: var(--red-text);
+    border-color: rgba(226, 75, 74, 0.35);
+    background: var(--red-bg);
+  }
+
+  .maintainer-ux-state[data-ux-state='saved'] {
+    color: var(--green-text);
+    border-color: rgba(29, 158, 117, 0.35);
+    background: var(--green-bg);
   }
 
   #maintainer-status {
@@ -1327,7 +1384,10 @@
     </div>
 
     <div class="maintainer-footer">
-      <span id="maintainer-status">Sin cambios</span>
+      <div class="maintainer-status-wrap">
+        <span class="maintainer-ux-state" id="maintainer-ux-state" data-ux-state="clean">Limpio</span>
+        <span id="maintainer-status">Sin cambios</span>
+      </div>
       <div class="maintainer-actions">
         <button class="btn-outline" id="mp-export" type="button">Exportar .md</button>
         <button class="btn-amber" id="mp-reset" type="button">Volver a proyectos.md</button>
@@ -2169,11 +2229,55 @@ function applyActiveFilter() {
   if (active) applyFilter(active.dataset.rag || 'todos', active);
 }
 
+const MAINTAINER_UX_LABELS = {
+  clean: 'Limpio',
+  dirty: 'Con cambios pendientes',
+  'validation-error': 'Validacion con error',
+  saved: 'Guardado correcto',
+  'import-conflict': 'Conflicto en importacion'
+};
+
+function deriveMaintainerUxState(message, isError) {
+  const normalized = String(message || '').toLowerCase();
+
+  if (normalized.includes('conflicto') || normalized.includes('no se pudieron cargar datos')) {
+    return 'import-conflict';
+  }
+
+  if (normalized.includes('cambios pendientes')) {
+    return 'dirty';
+  }
+
+  if (normalized.includes('guardado') || normalized.includes('eliminado') || normalized.includes('exportado')) {
+    return 'saved';
+  }
+
+  if (isError) {
+    return 'validation-error';
+  }
+
+  return 'clean';
+}
+
 function setMaintainerStatus(message, isError) {
-  const node = document.getElementById('maintainer-status');
-  if (!node) return;
-  node.textContent = message;
-  node.classList.toggle('error', !!isError);
+  const statusNode = document.getElementById('maintainer-status');
+  const uxNode = document.getElementById('maintainer-ux-state');
+  const panelNode = document.getElementById('maintainer-panel');
+  if (!statusNode) return;
+
+  const uxState = deriveMaintainerUxState(message, isError);
+
+  statusNode.textContent = message;
+  statusNode.classList.toggle('error', !!isError);
+
+  if (uxNode) {
+    uxNode.textContent = MAINTAINER_UX_LABELS[uxState] || MAINTAINER_UX_LABELS.clean;
+    uxNode.setAttribute('data-ux-state', uxState);
+  }
+
+  if (panelNode) {
+    panelNode.setAttribute('data-ux-state', uxState);
+  }
 }
 
 function renderStageEditor() {
@@ -2434,6 +2538,30 @@ function setupMaintainerEvents() {
     selectedProjectIndex = -1;
     await loadData();
     setMaintainerStatus('Se restauró la data desde proyectos.md.', false);
+  });
+
+  const dirtyTargets = [
+    'mp-name',
+    'mp-description',
+    'mp-responsable',
+    'mp-rag',
+    'mp-project-select'
+  ];
+
+  STAGE_KEYS.forEach((key) => {
+    dirtyTargets.push(`mp-${key}`);
+  });
+
+  dirtyTargets.forEach((id) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+
+    const notifyDirty = () => {
+      setMaintainerStatus('Con cambios pendientes por guardar.', false);
+    };
+
+    node.addEventListener('input', notifyDirty);
+    node.addEventListener('change', notifyDirty);
   });
 }
 
