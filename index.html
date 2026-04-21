@@ -1576,6 +1576,14 @@ const PHASES_CATALOG = [
   { id: 'cierre',         order: 5, label: 'Cierre' }
 ];
 
+/**
+ * Shims de compatibilidad para código heredado del mantenedor.
+ * STAGE_KEYS y STAGE_LABELS quedan vacíos ya que el modelo migró a project.tasks[].
+ * Se eliminarán cuando Etapa 4 migre el UI del mantenedor al nuevo modelo.
+ */
+const STAGE_LABELS = {};
+const STAGE_KEYS = [];
+
 /** Catálogo canónico de tareas por fase */
 const TASKS_CATALOG = {
   definicion: [
