@@ -1643,6 +1643,7 @@ let currentProjects = [];
 let selectedProjectIndex = -1;
 let isTableFullscreen = false;
 let dataProvider = createMarkdownDataProvider([]);
+const maintainerController = createMaintainerController();
 const DATA_SOURCE_MODES = ['markdown', 'planner'];
 
 /**
@@ -1905,6 +1906,85 @@ function createMarkdownDataProvider(initialProjects) {
 
   provider.reset(Array.isArray(initialProjects) ? initialProjects : []);
   return provider;
+}
+
+function createMaintainerController() {
+  const emptyDraft = sanitizeProject({ name: '', rag: 'verde' });
+  const state = {
+    projects: [],
+    selectedIndex: -1,
+    draft: { ...emptyDraft },
+    activeOperation: ''
+  };
+
+  const cloneProjects = (projects) => projects.map((project) => ({ ...project }));
+
+  const syncDraftFromSelection = () => {
+    if (state.selectedIndex >= 0 && state.selectedIndex < state.projects.length) {
+      state.draft = { ...state.projects[state.selectedIndex] };
+      return;
+    }
+
+    state.selectedIndex = -1;
+    state.draft = { ...emptyDraft };
+  };
+
+  const assertSelectionUnlocked = () => {
+    if (state.activeOperation) {
+      throw new Error(`Operacion en curso: ${state.activeOperation}. Espera a que termine.`);
+    }
+  };
+
+  return {
+    setProjects(projects) {
+      state.projects = cloneProjects(Array.isArray(projects) ? projects : []);
+      syncDraftFromSelection();
+      return this.getState();
+    },
+
+    select(index, options) {
+      const cfg = options || {};
+      if (!cfg.system) {
+        assertSelectionUnlocked();
+      }
+      const nextIndex = Number.isInteger(index) ? index : -1;
+      state.selectedIndex = nextIndex >= 0 && nextIndex < state.projects.length ? nextIndex : -1;
+      syncDraftFromSelection();
+      return this.getState();
+    },
+
+    startNewDraft(options) {
+      return this.select(-1, options);
+    },
+
+    setDraft(project) {
+      state.draft = sanitizeProject(project || emptyDraft);
+      return this.getState();
+    },
+
+    getState() {
+      return {
+        projects: cloneProjects(state.projects),
+        selectedIndex: state.selectedIndex,
+        draft: { ...state.draft },
+        activeOperation: state.activeOperation
+      };
+    },
+
+    async runCriticalOperation(operationName, task) {
+      if (state.activeOperation) {
+        throw new Error(`Operacion en curso: ${state.activeOperation}. Espera a que termine.`);
+      }
+
+      state.activeOperation = String(operationName || 'operacion');
+
+      try {
+        return await task();
+      } finally {
+        state.activeOperation = '';
+      }
+    }
+  };
 }
 
 function getPlannerBucketsByProject(projectName) {
@@ -2212,6 +2292,7 @@ function stageHTML(key, state) {
 function renderProjects(projects) {
   dataProvider.reset(projects);
   currentProjects = dataProvider.refresh();
+  maintainerController.setProjects(currentProjects);
   const container = document.getElementById('proj-rows');
   container.innerHTML = '';
 
@@ -2341,6 +2422,7 @@ function renderStageEditor() {
 
 function writeForm(project) {
   const p = sanitizeProject(project || { name: '', rag: 'verde' });
+  maintainerController.setDraft(p);
   document.getElementById('mp-name').value = p.name || '';
   document.getElementById('mp-description').value = p.descripcion || '';
   document.getElementById('mp-responsable').value = p.responsable || '';
@@ -2369,6 +2451,8 @@ function refreshMaintainerSelect() {
   const select = document.getElementById('mp-project-select');
   if (!select) return;
 
+  maintainerController.setProjects(currentProjects);
+
   select.innerHTML = '';
 
   const empty = document.createElement('option');
@@ -2387,9 +2471,10 @@ function refreshMaintainerSelect() {
     select.value = String(selectedProjectIndex);
     writeForm(currentProjects[selectedProjectIndex]);
   } else {
-    selectedProjectIndex = -1;
+    const snapshot = maintainerController.startNewDraft();
+    selectedProjectIndex = snapshot.selectedIndex;
     select.value = '-1';
-    writeForm({ name: '', rag: 'verde' });
+    writeForm(snapshot.draft);
   }
 }
 
@@ -2412,7 +2497,7 @@ function downloadMarkdown() {
   URL.revokeObjectURL(url);
 }
 
-async function loadData() {
+async function loadDataCore() {
   try {
     const local = localStorage.getItem(DATA_KEY);
     const text = local || await (async () => {
@@ -2444,11 +2529,30 @@ async function loadData() {
   }
 }
 
+async function loadData() {
+  try {
+    await maintainerController.runCriticalOperation('refresh', async () => {
+      await loadDataCore();
+    });
+  } catch (error) {
+    setMaintainerStatus(error.message, true);
+  }
+}
+
 function openMaintainer(idx) {
   var panel = document.getElementById('maintainer-panel');
   if (panel) panel.classList.remove('hidden');
   renderStageEditor();
-  selectedProjectIndex = (typeof idx === 'number') ? idx : -1;
+  const desired = (typeof idx === 'number') ? idx : -1;
+  try {
+    const snapshot = desired >= 0
+      ? maintainerController.select(desired)
+      : maintainerController.startNewDraft();
+    selectedProjectIndex = snapshot.selectedIndex;
+  } catch (error) {
+    setMaintainerStatus(error.message, true);
+    return;
+  }
   refreshMaintainerSelect();
   var msg = (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length)
     ? 'Editando: ' + currentProjects[selectedProjectIndex].name
@@ -2471,19 +2575,33 @@ function setupMaintainerEvents() {
   }
 
   document.getElementById('mp-project-select').addEventListener('change', (event) => {
-    selectedProjectIndex = parseInt(event.target.value, 10);
-    if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
-      writeForm(currentProjects[selectedProjectIndex]);
-      setMaintainerStatus(`Editando: ${currentProjects[selectedProjectIndex].name}`, false);
-    } else {
-      selectedProjectIndex = -1;
-      writeForm({ name: '', rag: 'verde' });
-      setMaintainerStatus('Nuevo proyecto listo para crear.', false);
+    const desiredIndex = parseInt(event.target.value, 10);
+
+    try {
+      const snapshot = desiredIndex >= 0
+        ? maintainerController.select(desiredIndex)
+        : maintainerController.startNewDraft();
+      selectedProjectIndex = snapshot.selectedIndex;
+      writeForm(snapshot.draft);
+      if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
+        setMaintainerStatus(`Editando: ${currentProjects[selectedProjectIndex].name}`, false);
+      } else {
+        setMaintainerStatus('Nuevo proyecto listo para crear.', false);
+      }
+    } catch (error) {
+      setMaintainerStatus(error.message, true);
+      event.target.value = String(selectedProjectIndex >= 0 ? selectedProjectIndex : -1);
     }
   });
 
   document.getElementById('mp-new').addEventListener('click', () => {
-    selectedProjectIndex = -1;
+    try {
+      const snapshot = maintainerController.startNewDraft();
+      selectedProjectIndex = snapshot.selectedIndex;
+    } catch (error) {
+      setMaintainerStatus(error.message, true);
+      return;
+    }
     refreshMaintainerSelect();
     setMaintainerStatus('Nuevo proyecto listo para crear.', false);
   });
@@ -2493,28 +2611,35 @@ function setupMaintainerEvents() {
     setMaintainerStatus('Cambios descartados en formulario.', false);
   });
 
-  document.getElementById('mp-save').addEventListener('click', () => {
-    let next;
+  document.getElementById('mp-save').addEventListener('click', async () => {
     try {
-      dataProvider.reset(currentProjects);
-      if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
-        dataProvider.update(selectedProjectIndex, readForm());
-      } else {
-        dataProvider.create(readForm());
-      }
-      next = dataProvider.refresh();
+      await maintainerController.runCriticalOperation('save', async () => {
+        let next;
+        try {
+          dataProvider.reset(currentProjects);
+          if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
+            dataProvider.update(selectedProjectIndex, readForm());
+          } else {
+            dataProvider.create(readForm());
+          }
+          next = dataProvider.refresh();
+        } catch (error) {
+          setMaintainerStatus(error.message, true);
+          return;
+        }
+
+        saveLocalData(next);
+        renderProjects(next);
+        applyActiveFilter();
+        const snapshot = maintainerController.startNewDraft({ system: true });
+        selectedProjectIndex = snapshot.selectedIndex;
+        refreshMaintainerSelect();
+        setMaintainerStatus('Proyecto guardado en almacenamiento local.', false);
+        document.getElementById('save-success-dialog').classList.remove('hidden');
+      });
     } catch (error) {
       setMaintainerStatus(error.message, true);
-      return;
     }
-
-    saveLocalData(next);
-    renderProjects(next);
-    applyActiveFilter();
-    selectedProjectIndex = -1;
-    refreshMaintainerSelect();
-    setMaintainerStatus('Proyecto guardado en almacenamiento local.', false);
-    document.getElementById('save-success-dialog').classList.remove('hidden');
   });
 
   document.getElementById('mp-success-continue').addEventListener('click', () => {
@@ -2527,37 +2652,50 @@ function setupMaintainerEvents() {
   });
 
   document.getElementById('mp-form-reset').addEventListener('click', () => {
-    selectedProjectIndex = -1;
-    refreshMaintainerSelect();
-    setMaintainerStatus('Formulario reiniciado.', false);
-  });
-
-  document.getElementById('mp-delete').addEventListener('click', () => {
-    if (selectedProjectIndex < 0 || selectedProjectIndex >= currentProjects.length) {
-      setMaintainerStatus('Selecciona un proyecto para eliminar.', true);
-      return;
-    }
-
-    const target = currentProjects[selectedProjectIndex];
-    if (!window.confirm(`Se eliminará el proyecto "${target.name}". ¿Deseas continuar?`)) {
-      return;
-    }
-
-    let next;
     try {
-      dataProvider.reset(currentProjects);
-      dataProvider.remove(selectedProjectIndex);
-      next = dataProvider.refresh();
+      const snapshot = maintainerController.startNewDraft();
+      selectedProjectIndex = snapshot.selectedIndex;
     } catch (error) {
       setMaintainerStatus(error.message, true);
       return;
     }
+    refreshMaintainerSelect();
+    setMaintainerStatus('Formulario reiniciado.', false);
+  });
 
-    selectedProjectIndex = -1;
-    saveLocalData(next);
-    renderProjects(next);
-    applyActiveFilter();
-    setMaintainerStatus('Proyecto eliminado en almacenamiento local.', false);
+  document.getElementById('mp-delete').addEventListener('click', async () => {
+    try {
+      await maintainerController.runCriticalOperation('delete', async () => {
+        if (selectedProjectIndex < 0 || selectedProjectIndex >= currentProjects.length) {
+          setMaintainerStatus('Selecciona un proyecto para eliminar.', true);
+          return;
+        }
+
+        const target = currentProjects[selectedProjectIndex];
+        if (!window.confirm(`Se eliminará el proyecto "${target.name}". ¿Deseas continuar?`)) {
+          return;
+        }
+
+        let next;
+        try {
+          dataProvider.reset(currentProjects);
+          dataProvider.remove(selectedProjectIndex);
+          next = dataProvider.refresh();
+        } catch (error) {
+          setMaintainerStatus(error.message, true);
+          return;
+        }
+
+        const snapshot = maintainerController.startNewDraft({ system: true });
+        selectedProjectIndex = snapshot.selectedIndex;
+        saveLocalData(next);
+        renderProjects(next);
+        applyActiveFilter();
+        setMaintainerStatus('Proyecto eliminado en almacenamiento local.', false);
+      });
+    } catch (error) {
+      setMaintainerStatus(error.message, true);
+    }
   });
 
   document.getElementById('mp-export').addEventListener('click', () => {
@@ -2566,10 +2704,17 @@ function setupMaintainerEvents() {
   });
 
   document.getElementById('mp-reset').addEventListener('click', async () => {
-    localStorage.removeItem(DATA_KEY);
-    selectedProjectIndex = -1;
-    await loadData();
-    setMaintainerStatus('Se restauró la data desde proyectos.md.', false);
+    try {
+      await maintainerController.runCriticalOperation('reset', async () => {
+        localStorage.removeItem(DATA_KEY);
+        const snapshot = maintainerController.startNewDraft({ system: true });
+        selectedProjectIndex = snapshot.selectedIndex;
+        await loadDataCore();
+        setMaintainerStatus('Se restauró la data desde proyectos.md.', false);
+      });
+    } catch (error) {
+      setMaintainerStatus(error.message, true);
+    }
   });
 
   const dirtyTargets = [
