@@ -17,6 +17,14 @@ El agente debe:
 
 ## Automatizaciones Actuales
 
+Estado de implementación verificado en este repo:
+- `load-work-report.ps1`: implementado
+- `validate-pre-implementation.ps1`: implementado
+- `close-session.ps1`: implementado
+- `advance-after-pr-close.ps1`: implementado
+- `create-issue-from-context.ps1`: pendiente en esta rama
+- `create-pr.ps1`: pendiente en esta rama
+
 ### 0. Session Guardrails (Inicio y Cierre)
 
 **Problema que resuelve**: Evitar sesiones que inician o terminan en una rama no controlada.
@@ -110,6 +118,7 @@ El agente debe:
 **Integración**:
 - Si hay siguiente issue abierto, agente puede reportar "Continuemos con issue #X".
 - Basis para gatillar siguiente implementación.
+- Este paso define la completitud del ciclo post-merge: PR mergeado + issue cerrado + siguiente issue reportado.
 
 ---
 
