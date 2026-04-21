@@ -2622,6 +2622,7 @@ function setupMaintainerEvents() {
       selectedProjectIndex = snapshot.selectedIndex;
       writeForm(snapshot.draft);
       syncBaselineFromForm();
+      refreshDirtyState();
       if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
         setMaintainerStatus(`Editando: ${currentProjects[selectedProjectIndex].name}`, false);
       } else {
@@ -2649,6 +2650,7 @@ function setupMaintainerEvents() {
   document.getElementById('mp-cancel').addEventListener('click', () => {
     refreshMaintainerSelect();
     syncBaselineFromForm();
+    refreshDirtyState();
     setMaintainerStatus('Cambios descartados en formulario.', false);
   });
 
@@ -2676,6 +2678,7 @@ function setupMaintainerEvents() {
         selectedProjectIndex = snapshot.selectedIndex;
         refreshMaintainerSelect();
         syncBaselineFromForm();
+        refreshDirtyState();
         setMaintainerStatus('Proyecto guardado en almacenamiento local.', false);
         document.getElementById('save-success-dialog').classList.remove('hidden');
       });
