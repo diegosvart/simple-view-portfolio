@@ -1642,9 +1642,10 @@ const PLANNER_TASK_TEMPLATE = {
 let currentProjects = [];
 let selectedProjectIndex = -1;
 let isTableFullscreen = false;
-let dataProvider = createMarkdownDataProvider([]);
-const maintainerController = createMaintainerController();
 const DATA_SOURCE_MODES = ['markdown', 'planner'];
+const DATA_SOURCE_MODE = 'markdown';
+let dataProvider = createDataProvider(DATA_SOURCE_MODE);
+const maintainerController = createMaintainerController();
 
 /**
  * @typedef {Object} PlannerTaskModel
@@ -1745,6 +1746,20 @@ function mapPlannerSnapshotToProjectModel(snapshot) {
   });
 
   return sanitizeProject(draft);
+}
+
+/**
+ * Factory que retorna el provider apropiado según DATA_SOURCE_MODE.
+ * Para cambiar de proveedor, actualizar DATA_SOURCE_MODE y proveer implementación.
+ * @param {string} mode - 'markdown' o 'planner'
+ * @param {Array} [initialProjects]
+ * @returns {DataProvider}
+ */
+function createDataProvider(mode, initialProjects) {
+  if (mode === 'planner') {
+    return createPlannerDataProviderContract({});
+  }
+  return createMarkdownDataProvider(initialProjects || []);
 }
 
 /**
