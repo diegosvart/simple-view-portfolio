@@ -2,6 +2,18 @@
 
 Referencia rápida de comandos para ejecutar el flujo de trabajo.
 
+## Nota Arquitectonica
+
+- Frontend canonico actual: `index.html` en la raiz del repo.
+- SPFx en `m365/spfx` esta deprecado y no es la superficie activa para nuevas features.
+- Ver ADR: `docs/decisions/ADR-0001-deprecate-spfx.md`.
+- Ver plan tecnico: `docs/FRONTEND_ROOT_PLAN.md`.
+
+Validacion automatica recomendada:
+```powershell
+./scripts/validate-frontend-docs.ps1
+```
+
 ---
 
 ## 0. Inicio de Sesion (obligatorio)

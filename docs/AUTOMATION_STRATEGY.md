@@ -2,6 +2,14 @@
 
 Este documento define cómo el agente detecta oportunidades de automatización y las implementa en el flujo de trabajo.
 
+## Nota de Arquitectura Actual
+
+- El frontend canonico del repositorio vive en `index.html` en la raiz.
+- `m365/spfx` esta deprecado como superficie de desarrollo activo.
+- Toda automatizacion o mejora funcional de frontend debe apuntar al root frontend salvo reactivacion explicita de SPFx.
+- Ver ADR: `docs/decisions/ADR-0001-deprecate-spfx.md`.
+- Ver plan tecnico: `docs/FRONTEND_ROOT_PLAN.md`.
+
 ## Principio General
 
 **"Si algo es repetible y sin ambigüedad, debe automatizarse."**

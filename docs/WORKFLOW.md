@@ -534,4 +534,9 @@ gh auth login
 - [GitHub CLI Manual](https://cli.github.com/manual/)
 - [Convenciones Conventional Commits](https://www.conventionalcommits.org/)
 - Memoria del repositorio: `/memories/repo/spfx-migration-notes.md`
+- ADR vigente: `docs/decisions/ADR-0001-deprecate-spfx.md`
+- Plan tecnico vigente del frontend root: `docs/FRONTEND_ROOT_PLAN.md`
+- Superficie frontend canonica actual: `index.html` en la raiz del repo.
+- `m365/spfx` queda deprecado y no debe recibir nuevas features salvo reactivacion explicita.
+- Verificacion automatica minima para esta decision: `./scripts/validate-frontend-docs.ps1`
 
