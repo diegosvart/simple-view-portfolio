@@ -20,6 +20,16 @@ const STAGE_KEYS = Object.keys(STAGE_LABELS);
 const STAGE_STATE_OPTIONS = ['completado', 'en-curso', 'pendiente', 'bloqueado'];
 const RAG_OPTIONS = ['verde', 'ambar', 'rojo'];
 
+type MaintainerUxState = 'clean' | 'dirty' | 'validation-error' | 'saved' | 'import-conflict';
+
+const UX_STATE_LABELS: Record<MaintainerUxState, string> = {
+  clean: 'Limpio',
+  dirty: 'Con cambios pendientes',
+  'validation-error': 'Validacion con error',
+  saved: 'Guardado correcto',
+  'import-conflict': 'Conflicto en importacion'
+};
+
 const MARKDOWN_HEADER = `# Portafolio TI 2026 - Grupo EBI
 # Fuente de datos del tablero de proyectos
 # Editar desde el mantenedor del WebPart o manualmente.
@@ -255,6 +265,28 @@ function sanitizeProject(project: IProjectData): IProjectData {
   });
 
   return normalized;
+}
+
+function projectEquals(left: IProjectData, right: IProjectData): boolean {
+  const normalizedLeft = sanitizeProject(left);
+  const normalizedRight = sanitizeProject(right);
+
+  if (
+    normalizedLeft.name !== normalizedRight.name ||
+    normalizedLeft.descripcion !== normalizedRight.descripcion ||
+    normalizedLeft.responsable !== normalizedRight.responsable ||
+    normalizedLeft.rag !== normalizedRight.rag
+  ) {
+    return false;
+  }
+
+  for (const stageKey of STAGE_KEYS) {
+    if (normalizedLeft[stageKey] !== normalizedRight[stageKey]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function setTheme(wrapper: HTMLElement, theme: string): void {
@@ -511,12 +543,37 @@ function writeProjectForm(wrapper: HTMLElement, project: IProjectData): void {
 
 function setMaintainerStatus(wrapper: HTMLElement, message: string, isError: boolean): void {
   const statusNode = wrapper.querySelector<HTMLElement>('#maintainer-status');
+  const stateNode = wrapper.querySelector<HTMLElement>('#maintainer-ux-state');
+  const panel = wrapper.querySelector<HTMLElement>('#maintainer-panel');
+
+  let uxState: MaintainerUxState = 'clean';
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.indexOf('conflicto') >= 0) {
+    uxState = 'import-conflict';
+  } else if (normalizedMessage.indexOf('guardad') >= 0 || normalizedMessage.indexOf('eliminad') >= 0) {
+    uxState = 'saved';
+  } else if (normalizedMessage.indexOf('cambios pendientes') >= 0) {
+    uxState = 'dirty';
+  } else if (isError) {
+    uxState = 'validation-error';
+  }
+
   if (!statusNode) {
     return;
   }
 
   statusNode.textContent = message;
   statusNode.classList.toggle('error', isError);
+
+  if (stateNode) {
+    stateNode.textContent = UX_STATE_LABELS[uxState];
+    stateNode.setAttribute('data-ux-state', uxState);
+  }
+
+  if (panel) {
+    panel.setAttribute('data-ux-state', uxState);
+  }
 }
 
 export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvider): void {
@@ -528,6 +585,12 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
   let currentProjects: IProjectData[] = [];
   let currentEtag = '*';
   let selectedProjectIndex = -1;
+  let baselineProject: IProjectData = sanitizeProject({
+    name: '',
+    descripcion: '',
+    responsable: '',
+    rag: 'verde'
+  });
 
   const maintainerPanel = wrapper.querySelector<HTMLElement>('#maintainer-panel');
   const maintainerToggle = wrapper.querySelector<HTMLElement>('#maintainer-toggle');
@@ -562,6 +625,7 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
     if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
       projectSelect.value = String(selectedProjectIndex);
       writeProjectForm(wrapper, currentProjects[selectedProjectIndex]);
+      baselineProject = sanitizeProject(currentProjects[selectedProjectIndex]);
     } else {
       selectedProjectIndex = -1;
       projectSelect.value = '-1';
@@ -571,7 +635,24 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
         responsable: '',
         rag: 'verde'
       });
+      baselineProject = sanitizeProject({
+        name: '',
+        descripcion: '',
+        responsable: '',
+        rag: 'verde'
+      });
     }
+  };
+
+  const refreshDirtyState = (): void => {
+    const current = readProjectForm(wrapper);
+
+    if (projectEquals(current, baselineProject)) {
+      setMaintainerStatus(wrapper, 'Limpio: sin cambios pendientes.', false);
+      return;
+    }
+
+    setMaintainerStatus(wrapper, 'Con cambios pendientes por guardar.', false);
   };
 
   const loadProjects = async (showFallbackWarning: boolean): Promise<void> => {
@@ -591,6 +672,7 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
       setLastUpdate(wrapper);
       clearBanner(wrapper);
       setMaintainerStatus(wrapper, 'Datos cargados desde archivo remoto.', false);
+      refreshDirtyState();
     } catch (error) {
       currentProjects = parseMarkdown(projectsMarkdown);
       currentEtag = '*';
@@ -608,7 +690,8 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
         );
       }
 
-      setMaintainerStatus(wrapper, 'Modo contingencia: datos locales.', true);
+      setMaintainerStatus(wrapper, 'Conflicto en importacion: modo contingencia con datos locales.', true);
+      refreshDirtyState();
     }
   };
 
@@ -660,6 +743,7 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
       renderProjects(wrapper, currentProjects);
       applyCurrentFilter(wrapper);
       refreshMaintainerSelector();
+      baselineProject = sanitizeProject(safeDraft);
       setLastUpdate(wrapper);
       clearBanner(wrapper);
       setMaintainerStatus(wrapper, 'Cambios guardados correctamente.', false);
@@ -695,6 +779,7 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
       setLastUpdate(wrapper);
       clearBanner(wrapper);
       setMaintainerStatus(wrapper, 'Proyecto eliminado.', false);
+      refreshDirtyState();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo eliminar.';
       setMaintainerStatus(wrapper, message, true);
@@ -737,6 +822,7 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
 
       if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
         writeProjectForm(wrapper, currentProjects[selectedProjectIndex]);
+        baselineProject = sanitizeProject(currentProjects[selectedProjectIndex]);
         setMaintainerStatus(wrapper, `Editando: ${currentProjects[selectedProjectIndex].name}`, false);
       } else {
         selectedProjectIndex = -1;
@@ -746,8 +832,16 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
           responsable: '',
           rag: 'verde'
         });
+        baselineProject = sanitizeProject({
+          name: '',
+          descripcion: '',
+          responsable: '',
+          rag: 'verde'
+        });
         setMaintainerStatus(wrapper, 'Nuevo proyecto listo para crear.', false);
       }
+
+      refreshDirtyState();
     });
   }
 
@@ -764,6 +858,7 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
       selectedProjectIndex = -1;
       refreshMaintainerSelector();
       setMaintainerStatus(wrapper, 'Nuevo proyecto listo para crear.', false);
+      refreshDirtyState();
     });
   }
 
@@ -772,6 +867,7 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
     cancelButton.addEventListener('click', () => {
       refreshMaintainerSelector();
       setMaintainerStatus(wrapper, 'Cambios descartados en formulario.', false);
+      refreshDirtyState();
     });
   }
 
@@ -788,6 +884,16 @@ export function initApp(container: HTMLElement, dataProvider: IMarkdownDataProvi
       deleteProject();
     });
   }
+
+  wrapper.querySelectorAll<HTMLElement>('#maintainer-panel input, #maintainer-panel textarea, #maintainer-panel select').forEach((field) => {
+    field.addEventListener('input', () => {
+      refreshDirtyState();
+    });
+
+    field.addEventListener('change', () => {
+      refreshDirtyState();
+    });
+  });
 
   loadProjects(false);
 }
