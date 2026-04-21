@@ -2754,6 +2754,11 @@ function setupMaintainerEvents() {
   document.getElementById('mp-reset').addEventListener('click', async () => {
     try {
       await maintainerController.runCriticalOperation('reset', async () => {
+        const isDirty = !projectModelsEqual(sanitizeProject(readForm()), baselineProject);
+        if (isDirty && !window.confirm('Tienes cambios pendientes. ¿Descartar y recargar desde proyectos.md?')) {
+          setMaintainerStatus('Recarga cancelada. Se conservaron tus cambios locales.', false);
+          return;
+        }
         localStorage.removeItem(DATA_KEY);
         const snapshot = maintainerController.startNewDraft({ system: true });
         selectedProjectIndex = snapshot.selectedIndex;
@@ -2793,7 +2798,14 @@ function setupGlobalEvents() {
     button.addEventListener('click', () => applyFilter(button.dataset.rag || 'todos', button));
   });
 
-  document.getElementById('refresh-btn').addEventListener('click', () => loadData());
+  document.getElementById('refresh-btn').addEventListener('click', () => {
+    const uxNode = document.getElementById('maintainer-ux-state');
+    const isDirty = uxNode && uxNode.getAttribute('data-ux-state') === 'dirty';
+    if (isDirty && !window.confirm('Tienes cambios pendientes. ¿Descartar y recargar desde proyectos.md?')) {
+      return;
+    }
+    loadData();
+  });
 
   const tableHead = document.querySelector('.table-head');
   if (tableHead) {
