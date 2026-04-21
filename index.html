@@ -2738,6 +2738,7 @@ function setupMaintainerEvents() {
         renderProjects(next);
         applyActiveFilter();
         syncBaselineFromForm();
+        refreshDirtyState();
         setMaintainerStatus('Proyecto eliminado en almacenamiento local.', false);
       });
     } catch (error) {
