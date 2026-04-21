@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "live-server --port=8080 --open=index.html",
     "test": "npm run test:frontend-root",
     "test:frontend-root": "node --test tests/frontend-root/**/*.test.js"
   },
@@ -13,6 +14,7 @@
   "type": "commonjs",
   "devDependencies": {
     "daisyui": "^5.5.19",
+    "live-server": "^1.2.2",
     "tailwindcss": "^4.2.2"
   },
   "dependencies": {

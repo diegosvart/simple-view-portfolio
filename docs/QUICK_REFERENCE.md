@@ -51,6 +51,24 @@ Si necesitas excepcion controlada por cambios locales:
 ./scripts/validate-pre-implementation.ps1 -BaseBranch develop -AllowDirty
 ```
 
+## 0.6 Frontend Local (prueba interactiva real)
+
+Iniciar servidor local con autorecarga:
+```powershell
+npm run dev
+```
+
+URL esperada:
+- `http://localhost:8080/index.html`
+
+Detener servidor:
+- `Ctrl + C` en la terminal
+
+Si el puerto 8080 esta ocupado:
+```powershell
+npx live-server --port=8081 --open=index.html
+```
+
 
 ## 1. Crear Issue desde Contexto
 
