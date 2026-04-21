@@ -287,6 +287,19 @@
     gap: 12px;
   }
 
+  .maintainer-panel[data-ux-state='dirty'] {
+    border-color: rgba(186, 117, 23, 0.45);
+  }
+
+  .maintainer-panel[data-ux-state='validation-error'],
+  .maintainer-panel[data-ux-state='import-conflict'] {
+    border-color: rgba(226, 75, 74, 0.5);
+  }
+
+  .maintainer-panel[data-ux-state='saved'] {
+    border-color: rgba(29, 158, 117, 0.5);
+  }
+
   .maintainer-panel.hidden {
     display: none;
   }
@@ -375,6 +388,50 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+  }
+
+  .maintainer-status-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-ux-state {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border-md);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    background: var(--surface2);
+    font-weight: 600;
+  }
+
+  .maintainer-ux-state[data-ux-state='clean'] {
+    color: var(--text-2);
+  }
+
+  .maintainer-ux-state[data-ux-state='dirty'] {
+    color: var(--amber-text);
+    border-color: rgba(186, 117, 23, 0.35);
+    background: var(--amber-bg);
+  }
+
+  .maintainer-ux-state[data-ux-state='validation-error'],
+  .maintainer-ux-state[data-ux-state='import-conflict'] {
+    color: var(--red-text);
+    border-color: rgba(226, 75, 74, 0.35);
+    background: var(--red-bg);
+  }
+
+  .maintainer-ux-state[data-ux-state='saved'] {
+    color: var(--green-text);
+    border-color: rgba(29, 158, 117, 0.35);
+    background: var(--green-bg);
   }
 
   #maintainer-status {
