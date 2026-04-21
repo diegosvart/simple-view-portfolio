@@ -2560,7 +2560,35 @@ function openMaintainer(idx) {
   setMaintainerStatus(msg, false);
 }
 
+function projectModelsEqual(left, right) {
+  const a = sanitizeProject(left || { name: '', rag: 'verde' });
+  const b = sanitizeProject(right || { name: '', rag: 'verde' });
+
+  if (a.name !== b.name) return false;
+  if (a.descripcion !== b.descripcion) return false;
+  if (a.responsable !== b.responsable) return false;
+  if (a.rag !== b.rag) return false;
+
+  return STAGE_KEYS.every((key) => a[key] === b[key]);
+}
+
 function setupMaintainerEvents() {
+  let baselineProject = sanitizeProject({ name: '', rag: 'verde' });
+
+  const syncBaselineFromForm = () => {
+    baselineProject = sanitizeProject(readForm());
+  };
+
+  const refreshDirtyState = () => {
+    const current = sanitizeProject(readForm());
+    if (projectModelsEqual(current, baselineProject)) {
+      setMaintainerStatus('Sin cambios en formulario.', false);
+      return;
+    }
+
+    setMaintainerStatus('Con cambios pendientes por guardar.', false);
+  };
+
   const toggle = document.getElementById('maintainer-toggle');
   const panel = document.getElementById('maintainer-panel');
   if (toggle && panel) {
@@ -2583,6 +2611,7 @@ function setupMaintainerEvents() {
         : maintainerController.startNewDraft();
       selectedProjectIndex = snapshot.selectedIndex;
       writeForm(snapshot.draft);
+      syncBaselineFromForm();
       if (selectedProjectIndex >= 0 && selectedProjectIndex < currentProjects.length) {
         setMaintainerStatus(`Editando: ${currentProjects[selectedProjectIndex].name}`, false);
       } else {
@@ -2603,11 +2632,13 @@ function setupMaintainerEvents() {
       return;
     }
     refreshMaintainerSelect();
+    syncBaselineFromForm();
     setMaintainerStatus('Nuevo proyecto listo para crear.', false);
   });
 
   document.getElementById('mp-cancel').addEventListener('click', () => {
     refreshMaintainerSelect();
+    syncBaselineFromForm();
     setMaintainerStatus('Cambios descartados en formulario.', false);
   });
 
@@ -2634,6 +2665,7 @@ function setupMaintainerEvents() {
         const snapshot = maintainerController.startNewDraft({ system: true });
         selectedProjectIndex = snapshot.selectedIndex;
         refreshMaintainerSelect();
+        syncBaselineFromForm();
         setMaintainerStatus('Proyecto guardado en almacenamiento local.', false);
         document.getElementById('save-success-dialog').classList.remove('hidden');
       });
@@ -2660,6 +2692,7 @@ function setupMaintainerEvents() {
       return;
     }
     refreshMaintainerSelect();
+    syncBaselineFromForm();
     setMaintainerStatus('Formulario reiniciado.', false);
   });
 
@@ -2691,6 +2724,7 @@ function setupMaintainerEvents() {
         saveLocalData(next);
         renderProjects(next);
         applyActiveFilter();
+        syncBaselineFromForm();
         setMaintainerStatus('Proyecto eliminado en almacenamiento local.', false);
       });
     } catch (error) {
@@ -2710,6 +2744,7 @@ function setupMaintainerEvents() {
         const snapshot = maintainerController.startNewDraft({ system: true });
         selectedProjectIndex = snapshot.selectedIndex;
         await loadDataCore();
+        syncBaselineFromForm();
         setMaintainerStatus('Se restauró la data desde proyectos.md.', false);
       });
     } catch (error) {
@@ -2721,8 +2756,7 @@ function setupMaintainerEvents() {
     'mp-name',
     'mp-description',
     'mp-responsable',
-    'mp-rag',
-    'mp-project-select'
+    'mp-rag'
   ];
 
   STAGE_KEYS.forEach((key) => {
@@ -2733,13 +2767,11 @@ function setupMaintainerEvents() {
     const node = document.getElementById(id);
     if (!node) return;
 
-    const notifyDirty = () => {
-      setMaintainerStatus('Con cambios pendientes por guardar.', false);
-    };
-
-    node.addEventListener('input', notifyDirty);
-    node.addEventListener('change', notifyDirty);
+    node.addEventListener('input', refreshDirtyState);
+    node.addEventListener('change', refreshDirtyState);
   });
+
+  syncBaselineFromForm();
 }
 
 function setupGlobalEvents() {

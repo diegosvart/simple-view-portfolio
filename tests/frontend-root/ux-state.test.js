@@ -1,7 +1,26 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { UX_STATE_LABELS, deriveMaintainerUxState } = require('../../src/frontend-root/pure/ux-state');
+const { UX_STATE_LABELS, deriveMaintainerUxState, projectModelsEqual } = require('../../src/frontend-root/pure/ux-state');
+
+function createProject(name) {
+  return {
+    name,
+    descripcion: 'Descripcion',
+    responsable: 'PM',
+    rag: 'verde',
+    e1: 'pendiente',
+    e2: 'pendiente',
+    e3: 'pendiente',
+    e4: 'pendiente',
+    e5: 'pendiente',
+    e6: 'pendiente',
+    e7: 'pendiente',
+    e8: 'pendiente',
+    e9: 'pendiente',
+    e10: 'pendiente'
+  };
+}
 
 test('deriveMaintainerUxState returns clean for neutral states', () => {
   assert.equal(deriveMaintainerUxState('Sin cambios', false), 'clean');
@@ -33,4 +52,17 @@ test('UX_STATE_LABELS contains expected labels for all states', () => {
   assert.equal(UX_STATE_LABELS['validation-error'], 'Validacion con error');
   assert.equal(UX_STATE_LABELS.saved, 'Guardado correcto');
   assert.equal(UX_STATE_LABELS['import-conflict'], 'Conflicto en importacion');
+});
+
+test('projectModelsEqual returns true when projects match', () => {
+  const base = createProject('Proyecto A');
+  const same = createProject('Proyecto A');
+  assert.equal(projectModelsEqual(base, same), true);
+});
+
+test('projectModelsEqual returns false when any field differs', () => {
+  const base = createProject('Proyecto A');
+  const next = createProject('Proyecto A');
+  next.descripcion = 'Descripcion nueva';
+  assert.equal(projectModelsEqual(base, next), false);
 });
