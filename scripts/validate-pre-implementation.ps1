@@ -77,7 +77,7 @@ $upToDate = $false
 if ($hasUpstream) {
   $aheadBehind = (Invoke-Git "rev-list --left-right --count $BaseBranch...$BaseBranch@{upstream}") -join ''
   if (-not [string]::IsNullOrWhiteSpace($aheadBehind)) {
-    $parts = $aheadBehind.Trim().Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)
+    $parts = $aheadBehind.Trim() -split '\s+'
     if ($parts.Count -eq 2) {
       $ahead = [int]$parts[0]
       $behind = [int]$parts[1]
