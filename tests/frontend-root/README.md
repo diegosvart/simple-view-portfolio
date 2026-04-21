@@ -19,6 +19,7 @@ npm run test:frontend-root
 - Pure-function unit tests for metrics aggregation and bucket level thresholds.
 - Pure-function unit tests for maintainer UX state transitions.
 - Provider contract tests for local markdown adapter (load/create/update/remove/export/reset/refresh).
+- Controller/state layer tests for selection, draft transitions and async guards.
 
 ## Extracted pure modules
 
@@ -27,7 +28,8 @@ npm run test:frontend-root
 - `src/frontend-root/pure/metrics.js`
 - `src/frontend-root/pure/ux-state.js`
 - `src/frontend-root/pure/provider.js`
+- `src/frontend-root/pure/maintainer-controller.js`
 
 ## Next test targets
 
-- End-to-end UI event flow tests for maintainer actions against provider contract.
+- End-to-end UI event flow tests for maintainer actions against provider/controller integration.
