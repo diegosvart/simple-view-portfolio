@@ -40,6 +40,198 @@ interface IProjectData {
   [key: string]: string | undefined;
 }
 
+type PlannerTaskStatus = 'notStarted' | 'inProgress' | 'completed';
+
+interface IPlannerProviderConfig {
+  tenantId?: string;
+  groupId?: string;
+  planId?: string;
+}
+
+interface IPlannerTaskModel {
+  id: string;
+  title: string;
+  stageKey: string;
+  percentComplete: number;
+  status: PlannerTaskStatus;
+}
+
+interface IPlannerProjectSnapshot {
+  planId: string;
+  planTitle: string;
+  groupId: string;
+  projectName: string;
+  rag: string;
+  stages: Record<string, string>;
+  tasks: IPlannerTaskModel[];
+}
+
+export interface IPlannerDataProviderContract {
+  source: 'planner';
+  config: IPlannerProviderConfig;
+  loadPlannerSnapshots: () => Promise<IPlannerProjectSnapshot[]>;
+  setProjectCollection: (projects: IProjectData[]) => Promise<IProjectData[]>;
+  getProjectCollection: () => Promise<IProjectData[]>;
+  createProject: (project: IProjectData) => Promise<IProjectData>;
+  updateProject: (index: number, project: IProjectData) => Promise<IProjectData>;
+  removeProject: (index: number) => Promise<IProjectData>;
+}
+
+const PLANNER_CONTRACT_RULES: string[] = [
+  'No llamar Graph/Planner en esta iteracion; contrato y mapeos son de diseno.',
+  'El nombre de proyecto debe ser estable para mapear planTitle/projectName.',
+  'Las etapas deben usar solo estados permitidos: completado, en-curso, pendiente, bloqueado.',
+  'Los IDs de tasks deben ser estables por etapa para soportar sincronizacion incremental futura.'
+];
+
+function mapStageStateToTaskStatus(state: string): PlannerTaskStatus {
+  if (state === 'completado') {
+    return 'completed';
+  }
+
+  if (state === 'en-curso' || state === 'bloqueado') {
+    return 'inProgress';
+  }
+
+  return 'notStarted';
+}
+
+function mapStageStateToPercent(state: string): number {
+  if (state === 'completado') {
+    return 100;
+  }
+
+  if (state === 'en-curso') {
+    return 50;
+  }
+
+  return 0;
+}
+
+export function mapProjectToPlannerSnapshot(
+  project: IProjectData,
+  config: IPlannerProviderConfig = {}
+): IPlannerProjectSnapshot {
+  const normalized = sanitizeProject(project);
+  const stages: Record<string, string> = {};
+  const tasks: IPlannerTaskModel[] = [];
+
+  STAGE_KEYS.forEach((stageKey) => {
+    const state = normalizeStageState(normalized[stageKey]);
+    stages[stageKey] = state;
+
+    tasks.push({
+      id: `${normalized.name || 'project'}-${stageKey}`,
+      title: STAGE_LABELS[stageKey] || stageKey,
+      stageKey,
+      percentComplete: mapStageStateToPercent(state),
+      status: mapStageStateToTaskStatus(state)
+    });
+  });
+
+  return {
+    planId: config.planId || '',
+    planTitle: normalized.name,
+    groupId: config.groupId || '',
+    projectName: normalized.name,
+    rag: normalizeRag(normalized.rag),
+    stages,
+    tasks
+  };
+}
+
+export function mapPlannerSnapshotToProject(snapshot: IPlannerProjectSnapshot): IProjectData {
+  const source = snapshot || ({
+    projectName: '',
+    planTitle: '',
+    rag: 'verde',
+    stages: {}
+  } as IPlannerProjectSnapshot);
+
+  const draft: IProjectData = {
+    name: (source.projectName || source.planTitle || '').trim(),
+    descripcion: '',
+    responsable: '',
+    rag: normalizeRag(source.rag)
+  };
+
+  STAGE_KEYS.forEach((stageKey) => {
+    const next = source.stages && source.stages[stageKey] ? source.stages[stageKey] : 'pendiente';
+    draft[stageKey] = normalizeStageState(next);
+  });
+
+  return sanitizeProject(draft);
+}
+
+export function validatePlannerSnapshotContract(snapshot: IPlannerProjectSnapshot): string[] {
+  const issues: string[] = [];
+  const src = snapshot;
+
+  if (!src || !src.projectName || !src.projectName.trim()) {
+    issues.push('projectName es obligatorio para mantener identidad con ProjectModel.name.');
+  }
+
+  if (!src || !src.planTitle || !src.planTitle.trim()) {
+    issues.push('planTitle es obligatorio para consistencia con Planner.');
+  }
+
+  const stageKeys = src && src.stages ? Object.keys(src.stages) : [];
+  if (!stageKeys.length) {
+    issues.push('stages no puede estar vacio; debe incluir el mapa de etapas canonicas.');
+  }
+
+  STAGE_KEYS.forEach((stageKey) => {
+    if (!src || !src.stages || !src.stages[stageKey]) {
+      issues.push(`Falta stage requerido: ${stageKey}.`);
+      return;
+    }
+
+    const stageState = normalizeStageState(src.stages[stageKey]);
+    if (stageState !== src.stages[stageKey]) {
+      issues.push(`Valor no canonico en ${stageKey}: ${src.stages[stageKey]}.`);
+    }
+  });
+
+  const seenIds: Record<string, boolean> = {};
+  const taskList = src && Array.isArray(src.tasks) ? src.tasks : [];
+  taskList.forEach((task) => {
+    if (!task.id) {
+      issues.push('Task sin id estable detectada.');
+      return;
+    }
+
+    if (seenIds[task.id]) {
+      issues.push(`Task id duplicado: ${task.id}.`);
+      return;
+    }
+
+    seenIds[task.id] = true;
+  });
+
+  return issues;
+}
+
+export function createPlannerDataProviderContract(config: IPlannerProviderConfig = {}): IPlannerDataProviderContract {
+  const notImplemented = async (): Promise<never> => {
+    throw new Error('PlannerDataProvider no implementado en esta iteracion.');
+  };
+
+  return {
+    source: 'planner',
+    config,
+    loadPlannerSnapshots: notImplemented,
+    setProjectCollection: notImplemented,
+    getProjectCollection: notImplemented,
+    createProject: notImplemented,
+    updateProject: notImplemented,
+    removeProject: notImplemented
+  };
+}
+
+export function getPlannerContractRules(): string[] {
+  return PLANNER_CONTRACT_RULES.slice();
+}
+
 function normalizeRag(value: string | undefined): string {
   const normalized = (value || '').toLowerCase().trim();
   return RAG_OPTIONS.indexOf(normalized) >= 0 ? normalized : 'verde';
