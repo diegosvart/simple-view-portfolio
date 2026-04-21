@@ -1,6 +1,6 @@
 # Last Session Memory
 
-- Fecha: 2026-04-21 15:06:40
+- Fecha: 2026-04-21 15:17:41
 - Repositorio: diegosvart/simple-view-portfolio
 - Rama activa: develop
 - Base esperada: develop
@@ -9,7 +9,7 @@
 - OK: cierre ejecutado en estado normalizado sobre la rama base.
 
 ## Resumen pequeno
-- Hotfix #72: STAGE_KEYS y STAGE_LABELS shims para fix crash de carga. PR #73 mergeada a develop. Etapas 2 y 3 ya integradas en sesion anterior (PRs #70 y #71).
+- Fix #74: tooltips sin tareas por proyectos pre-Etapa2 sin tasks[]. Migracion en ensureInitialized backfill desde TASKS_CATALOG. PR #75 mergeada a develop.
 
 ## Estado Git (corto)
 ```text
