@@ -271,11 +271,6 @@
     flex-wrap: wrap;
   }
 
-  /* Requested: keep old right controls hidden in normal view */
-  .controls-right {
-    display: none;
-  }
-
   .section-actions {
     display: flex;
     align-items: center;
@@ -306,15 +301,19 @@
   }
 
   .maintainer-panel {
-    margin-bottom: 1rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: var(--shadow-sm);
-    padding: 14px;
+    position: fixed;
+    inset: 18px;
+    z-index: 40;
+    background: color-mix(in srgb, var(--surface) 84%, rgba(9, 16, 28, 0.84));
+    border: 1px solid color-mix(in srgb, var(--border) 72%, rgba(255, 255, 255, 0.08));
+    border-radius: 20px;
+    box-shadow: 0 32px 80px rgba(7, 12, 20, 0.34);
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
+    backdrop-filter: blur(16px);
+    overflow: hidden;
   }
 
   .maintainer-panel[data-ux-state='dirty'] {
@@ -358,6 +357,269 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+  }
+
+  .maintainer-shell {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    gap: 16px;
+    flex: 1;
+  }
+
+  .maintainer-sidebar,
+  .maintainer-detail {
+    min-height: 0;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface2) 92%, transparent);
+    border-radius: 16px;
+  }
+
+  .maintainer-sidebar {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .maintainer-sidebar-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .maintainer-sidebar-head h4,
+  .maintainer-detail-head h4 {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .maintainer-sidebar-head p,
+  .maintainer-detail-head p {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  .maintainer-project-list {
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+  }
+
+  .maintainer-project-item {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+  }
+
+  .maintainer-project-item:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .maintainer-project-item.active {
+    border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+    box-shadow: 0 14px 24px rgba(7, 12, 20, 0.12);
+  }
+
+  .maintainer-project-top,
+  .maintainer-project-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .maintainer-project-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .maintainer-project-leader {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  .maintainer-project-progress {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-2);
+  }
+
+  .maintainer-project-empty {
+    border: 1px dashed var(--border-md);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 13px;
+  }
+
+  .maintainer-detail {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: auto;
+  }
+
+  .maintainer-detail-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-phase-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .maintainer-phase-tab {
+    min-width: 120px;
+    border: 1px solid var(--border-md);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 9px 11px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: border-color .18s ease, background .18s ease, transform .18s ease;
+  }
+
+  .maintainer-phase-tab:hover {
+    transform: translateY(-1px);
+  }
+
+  .maintainer-phase-tab.active {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    background: color-mix(in srgb, var(--accent-soft) 70%, var(--surface));
+  }
+
+  .maintainer-phase-tab-label {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .maintainer-phase-tab-meta {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+
+  .maintainer-phase-detail {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .maintainer-phase-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .maintainer-phase-summary h5 {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .maintainer-phase-summary p {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .maintainer-phase-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border-md);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .maintainer-task-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .maintainer-task-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface2);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .maintainer-task-code {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-3);
+  }
+
+  .maintainer-task-label {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .maintainer-task-status {
+    display: inline-flex;
+    width: fit-content;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+  }
+
+  .maintainer-task-status.ok {
+    color: var(--green-text);
+    background: var(--green-bg);
+  }
+
+  .maintainer-task-status.pend {
+    color: var(--amber-text);
+    background: var(--amber-bg);
+  }
+
+  .maintainer-task-status.bloq {
+    color: var(--red-text);
+    background: var(--red-bg);
   }
 
   .field-row {
@@ -467,6 +729,18 @@
   #maintainer-status {
     font-size: 12px;
     color: var(--text-2);
+  }
+
+  .sr-only-anchor {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   #maintainer-status.error {
@@ -642,8 +916,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 300;
     font-family: var(--mono);
     letter-spacing: -0.02em;
     border: 1px solid transparent;
@@ -1208,6 +1482,20 @@
   }
 
   @media (max-width: 920px) {
+    .maintainer-panel {
+      inset: 10px;
+      padding: 12px;
+      border-radius: 16px;
+    }
+
+    .maintainer-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .maintainer-sidebar {
+      max-height: 32vh;
+    }
+
     .metrics-row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1257,6 +1545,10 @@
 
     .maintainer-grid,
     .stage-editor-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .maintainer-task-list {
       grid-template-columns: 1fr;
     }
 
@@ -1359,7 +1651,7 @@
     <div class="maintainer-head">
       <div>
         <h3>Mantenedor de proyectos</h3>
-        <p>Modo genérico: persistencia local del navegador. Doble clic en la tabla para abrir.</p>
+        <p>Vista master-detail local. Doble clic en una fila o usa el botón del header para abrir a pantalla completa.</p>
       </div>
       <div class="maintainer-actions">
         <button class="btn-green" id="mp-new" type="button">Nuevo</button>
@@ -1368,41 +1660,61 @@
       </div>
     </div>
 
-    <div class="maintainer-grid">
-      <label class="field-row">
-        <span>Proyecto</span>
-        <select id="mp-project-select"></select>
-      </label>
-      <label class="field-row">
-        <span>Nombre</span>
-        <input id="mp-name" type="text" maxlength="120" placeholder="Nombre del proyecto" />
-      </label>
-      <label class="field-row field-col-2">
-        <span>Descripción</span>
-        <textarea id="mp-description" rows="2" placeholder="Descripción del proyecto"></textarea>
-      </label>
-      <label class="field-row">
-        <span>Responsable</span>
-        <input id="mp-responsable" type="text" maxlength="80" placeholder="PM" />
-      </label>
-      <label class="field-row">
-        <span>RAG</span>
-        <select id="mp-rag">
-          <option value="verde">Verde</option>
-          <option value="ambar">Ámbar</option>
-          <option value="rojo">Rojo</option>
-        </select>
-      </label>
-    </div>
+    <div class="maintainer-shell">
+      <aside class="maintainer-sidebar">
+        <div class="maintainer-sidebar-head">
+          <h4>Listado de proyectos</h4>
+          <p>Nombre, líder responsable y avance consolidado para seleccionar rápido.</p>
+        </div>
+        <label class="field-row sr-only-anchor">
+          <span>Proyecto</span>
+          <select id="mp-project-select"></select>
+        </label>
+        <div class="maintainer-project-list" id="maintainer-project-list"></div>
+      </aside>
 
-    <div class="stage-editor-grid" id="stage-editor-grid"></div>
+      <div class="maintainer-detail">
+        <div class="maintainer-detail-head">
+          <div>
+            <h4>Detalle del proyecto</h4>
+            <p>Metadatos generales y seguimiento por fase del modelo `tasks[]`.</p>
+          </div>
+        </div>
 
-    <div id="save-success-dialog" class="save-success-dialog hidden">
-      <div class="save-success-icon">✓</div>
-      <div class="save-success-msg">Proyecto guardado correctamente.</div>
-      <div class="save-success-actions">
-        <button class="btn-outline" id="mp-success-continue" type="button">Seguir editando</button>
-        <button class="btn-outline" id="mp-success-exit" type="button">Salir</button>
+        <div class="maintainer-grid">
+          <label class="field-row">
+            <span>Nombre</span>
+            <input id="mp-name" type="text" maxlength="120" placeholder="Nombre del proyecto" />
+          </label>
+          <label class="field-row">
+            <span>RAG</span>
+            <select id="mp-rag">
+              <option value="verde">Verde</option>
+              <option value="ambar">Ámbar</option>
+              <option value="rojo">Rojo</option>
+            </select>
+          </label>
+          <label class="field-row field-col-2">
+            <span>Descripción</span>
+            <textarea id="mp-description" rows="2" placeholder="Descripción del proyecto"></textarea>
+          </label>
+          <label class="field-row field-col-2">
+            <span>Responsable</span>
+            <input id="mp-responsable" type="text" maxlength="80" placeholder="PM" />
+          </label>
+        </div>
+
+        <div class="maintainer-phase-tabs" id="maintainer-phase-tabs"></div>
+        <div class="maintainer-phase-detail" id="maintainer-phase-detail"></div>
+
+        <div id="save-success-dialog" class="save-success-dialog hidden">
+          <div class="save-success-icon">✓</div>
+          <div class="save-success-msg">Proyecto guardado correctamente.</div>
+          <div class="save-success-actions">
+            <button class="btn-outline" id="mp-success-continue" type="button">Seguir editando</button>
+            <button class="btn-outline" id="mp-success-exit" type="button">Salir</button>
+          </div>
+        </div>
       </div>
     </div>
 

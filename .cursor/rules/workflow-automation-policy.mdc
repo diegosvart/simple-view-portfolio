@@ -1,0 +1,33 @@
+---
+description: Policy for identifying and converting repeated manual flows into scripts and skills.
+alwaysApply: true
+---
+
+# Automation Policy
+
+## Trigger
+Use this rule when a manual cycle repeats with the same steps three or more times.
+
+## Decision rule
+- If repeated >= 3 times and deterministic, propose automation.
+- If manual coordination is still required, keep human approval step and automate the rest.
+
+## Required output
+For each automation proposal include:
+1. repeated pattern detected
+2. proposed script command and parameters
+3. expected inputs/outputs
+4. risks and rollback
+5. docs and rule updates needed
+
+## Implementation checklist
+- Add or update script under `scripts/`.
+- Add/update agent behavior in `.cursor/rules/*.mdc`.
+- Update docs:
+  - `docs/WORKFLOW.md`
+  - `docs/QUICK_REFERENCE.md`
+  - `docs/AUTOMATION_STRATEGY.md`
+- Verify with `-DryRun` first when possible.
+
+## Failure handling
+- If automation is proposed but not documented, treat it as incomplete and block closure of the automation task.

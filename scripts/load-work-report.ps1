@@ -1,8 +1,6 @@
 param(
-  [Parameter(Mandatory = $true)]
   [string]$Owner,
 
-  [Parameter(Mandatory = $true)]
   [string]$Repo,
 
   [string]$BaseBranch = 'develop',
@@ -11,11 +9,42 @@ param(
 
   [switch]$AllowDirtyNormalize,
 
-  [int[]]$IssueSequence = @(3, 4, 5, 6, 8, 10, 9, 7, 13, 12, 14, 11, 20, 23)
+  [int[]]$IssueSequence = @(),
+
+  [string]$ConfigFile = (Join-Path $PSScriptRoot 'workflow-config.json')
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+$configHelpersPath = Join-Path $PSScriptRoot 'workflow-config.ps1'
+if (Test-Path -LiteralPath $configHelpersPath) {
+  . $configHelpersPath
+}
+
+$workflowConfig = $null
+if (Get-Command -Name Get-WorkflowConfig -ErrorAction SilentlyContinue) {
+  $workflowConfig = Get-WorkflowConfig -ConfigFilePath $ConfigFile
+}
+
+if (-not $PSBoundParameters.ContainsKey('Owner') -and $workflowConfig -and $workflowConfig.owner) {
+  $Owner = $workflowConfig.owner
+}
+if (-not $PSBoundParameters.ContainsKey('Repo') -and $workflowConfig -and $workflowConfig.repo) {
+  $Repo = $workflowConfig.repo
+}
+if (-not $PSBoundParameters.ContainsKey('BaseBranch') -and $workflowConfig -and $workflowConfig.baseBranch) {
+  $BaseBranch = $workflowConfig.baseBranch
+}
+if (-not $PSBoundParameters.ContainsKey('IssueSequence') -and $workflowConfig -and $workflowConfig.issueSequence.Count -gt 0) {
+  $IssueSequence = @($workflowConfig.issueSequence)
+}
+if (-not $IssueSequence -or $IssueSequence.Count -eq 0) {
+  $IssueSequence = @(3, 4, 5, 6, 8, 10, 9, 7, 13, 12, 14, 11, 20, 23)
+}
+if ([string]::IsNullOrWhiteSpace($Owner) -or [string]::IsNullOrWhiteSpace($Repo)) {
+  throw 'Owner/Repo no definidos. Proveer parametros o scripts/workflow-config.json.'
+}
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 

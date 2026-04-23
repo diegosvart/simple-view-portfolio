@@ -1,0 +1,39 @@
+---
+description: Core execution cycle for issue-based delivery in this repo.
+alwaysApply: true
+---
+
+# Workflow Core (Fases 0 -> 6)
+
+## Trigger
+Use this rule when the user asks to work on backlog items, implementation, planning, issue creation, PR creation, or session close.
+
+## Mandatory sequence
+1. Fase 0 (bootstrap):
+`./scripts/load-work-report.ps1`
+2. Fase 0.5 (pre-implementation validation):
+`./scripts/validate-pre-implementation.ps1`
+3. Fase 1 (create issue from context when needed):
+`./scripts/create-issue-from-context.ps1 -Context "<texto>"`
+4. Fase 2 (implement on feature branch):
+- `git checkout develop`
+- `git pull origin develop`
+- `git checkout -b feature/issue-<N>-<slug>`
+5. Fase 3 (create PR linked to issue):
+`./scripts/create-pr.ps1 -IssueNumber <N> -BranchName "feature/issue-<N>-<slug>" -CommitMessage "<msg>" -PrTitle "<title>"`
+6. Fase 4 (manual review/merge in GitHub).
+7. Fase 5 (post-merge mandatory close/advance):
+`./scripts/advance-after-pr-close.ps1 -PullNumber <PR_NUMBER>`
+8. Fase 6 (session close memory):
+`./scripts/close-session.ps1 -SessionSummary "<resumen>"`
+
+## Success criteria
+- Do not claim cycle completion at PR creation time.
+- Cycle is complete only after:
+  - PR merged into `develop`
+  - linked issue closed
+  - next issue reported
+
+## Failure criteria and handling
+- If script output contains `Resultado: BLOQUEADO`, stop and report blocking reason.
+- If a required script is missing, use documented `gh` fallback and explicitly report the fallback used.
