@@ -513,6 +513,7 @@ const PortfolioService = {
 let currentProjects = [];
 let selectedProjectIndex = -1;
 let isTableFullscreen = false;
+let activeMaintainerPhaseId = PHASES_CATALOG[0].id;
 const DATA_SOURCE_MODES = ['markdown', 'planner'];
 const DATA_SOURCE_MODE = 'markdown';
 let dataProvider = createDataProvider(DATA_SOURCE_MODE);
@@ -795,7 +796,7 @@ function createMarkdownDataProvider(initialProjects) {
 }
 
 function createMaintainerController() {
-  const emptyDraft = sanitizeProject({ name: '', rag: 'verde' });
+  const emptyDraft = sanitizeProject({ name: '', rag: 'verde', tasks: [] });
   const state = {
     projects: [],
     selectedIndex: -1,
@@ -1091,11 +1092,18 @@ function parseMD(text) {
  * @returns {ProjectModel}
  */
 function sanitizeProject(project) {
+  const normalizedTasks = normalizeProjectTasks(project);
+  const leader = String((project && (project.responsable || project.leader)) || '').trim();
   const safe = {
+    id: String((project && project.id) || '').trim(),
     name: (project.name || '').trim(),
     descripcion: (project.descripcion || '').trim(),
-    responsable: (project.responsable || '').trim(),
-    rag: normalizeRag(project.rag)
+    responsable: leader,
+    leader,
+    sponsor: String((project && project.sponsor) || '').trim(),
+    rag: normalizeRag(project.rag),
+    tasks: normalizedTasks,
+    removed: Boolean(project && project.removed)
   };
 
   STAGE_KEYS.forEach(key => {
@@ -1263,11 +1271,158 @@ function buildProjectRowElement(proj, idx) {
           <div class="rag-dot rag-${normalizeRag(proj.rag)}"></div>
           <span class="proj-name">${proj.name}</span>
         </div>
-        <div class="proj-resp">${proj.leader || ''}</div>
+        <div class="proj-resp">${proj.responsable || proj.leader || ''}</div>
       </div>
       <div class="phases-grid">${phasesHTML}</div>`;
   row.addEventListener('dblclick', function() { openMaintainer(idx); });
   return row;
+}
+
+function computeProjectTaskProgress(project) {
+  const tasks = normalizeProjectTasks(project).filter((task) => !task.removed);
+  if (!tasks.length) return 0;
+
+  const completed = tasks.filter((task) => task.status === 'ok').length;
+  return Math.round((completed * 100) / tasks.length);
+}
+
+function getTaskStatusLabel(status) {
+  return {
+    ok: 'Completada',
+    pend: 'Pendiente',
+    bloq: 'Bloqueada'
+  }[status] || 'Pendiente';
+}
+
+function ensureActiveMaintainerPhase(project) {
+  const safeProject = sanitizeProject(project || { name: '', rag: 'verde', tasks: [] });
+  const phaseIds = new Set(PHASES_CATALOG.map((phase) => phase.id));
+  if (!phaseIds.has(activeMaintainerPhaseId)) {
+    activeMaintainerPhaseId = PHASES_CATALOG[0].id;
+  }
+
+  const phaseData = getPhaseTasksByProject(safeProject);
+  const hasAnyTaskInActive = phaseData[activeMaintainerPhaseId] && phaseData[activeMaintainerPhaseId].all.length > 0;
+  if (hasAnyTaskInActive) return;
+
+  const firstWithTasks = PHASES_CATALOG.find((phase) => (phaseData[phase.id] && phaseData[phase.id].all.length > 0));
+  activeMaintainerPhaseId = firstWithTasks ? firstWithTasks.id : PHASES_CATALOG[0].id;
+}
+
+function renderMaintainerProjectList() {
+  const container = document.getElementById('maintainer-project-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  if (!currentProjects.length) {
+    const empty = document.createElement('div');
+    empty.className = 'maintainer-project-empty';
+    empty.textContent = 'No hay proyectos cargados. Usa "Nuevo" para preparar el primer detalle.';
+    container.appendChild(empty);
+    return;
+  }
+
+  currentProjects.forEach((project, index) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'maintainer-project-item';
+    if (index === selectedProjectIndex) {
+      item.classList.add('active');
+    }
+
+    const progress = computeProjectTaskProgress(project);
+    const leader = project.responsable || project.leader || 'Sin responsable';
+
+    item.innerHTML = `
+      <div class="maintainer-project-top">
+        <span class="maintainer-project-name">${project.name}</span>
+        <span class="maintainer-project-progress">${progress}%</span>
+      </div>
+      <div class="maintainer-project-bottom">
+        <span class="maintainer-project-leader">${leader}</span>
+        <span class="maintainer-project-leader">${normalizeRag(project.rag)}</span>
+      </div>`;
+
+    item.addEventListener('click', () => {
+      const select = document.getElementById('mp-project-select');
+      if (!select) return;
+      select.value = String(index);
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    container.appendChild(item);
+  });
+}
+
+function renderMaintainerPhaseTabs(project) {
+  const tabsNode = document.getElementById('maintainer-phase-tabs');
+  if (!tabsNode) return;
+
+  const safeProject = sanitizeProject(project || { name: '', rag: 'verde', tasks: [] });
+  ensureActiveMaintainerPhase(safeProject);
+  const phaseData = getPhaseTasksByProject(safeProject);
+  tabsNode.innerHTML = '';
+
+  PHASES_CATALOG.forEach((phase) => {
+    const summary = summarizePhase(phaseData[phase.id] || { all: [], completado: 0, pendiente: 0, bloqueado: 0 });
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'maintainer-phase-tab';
+    if (phase.id === activeMaintainerPhaseId) {
+      button.classList.add('active');
+    }
+    button.innerHTML = `
+      <span class="maintainer-phase-tab-label">${phase.label}</span>
+      <span class="maintainer-phase-tab-meta">${summary.percent}% · ${summary.total} tareas</span>`;
+    button.addEventListener('click', () => {
+      activeMaintainerPhaseId = phase.id;
+      renderMaintainerPhaseTabs(safeProject);
+      renderMaintainerPhaseDetail(safeProject);
+    });
+    tabsNode.appendChild(button);
+  });
+}
+
+function renderMaintainerPhaseDetail(project) {
+  const detailNode = document.getElementById('maintainer-phase-detail');
+  if (!detailNode) return;
+
+  const safeProject = sanitizeProject(project || { name: '', rag: 'verde', tasks: [] });
+  ensureActiveMaintainerPhase(safeProject);
+  const activePhase = PHASES_CATALOG.find((phase) => phase.id === activeMaintainerPhaseId) || PHASES_CATALOG[0];
+  const phaseData = getPhaseTasksByProject(safeProject)[activePhase.id] || { all: [], completado: 0, pendiente: 0, bloqueado: 0 };
+  const summary = summarizePhase(phaseData);
+
+  const cards = phaseData.all.length
+    ? phaseData.all.map((task) => `
+      <article class="maintainer-task-card">
+        <span class="maintainer-task-code">${task.code || activePhase.label}</span>
+        <strong class="maintainer-task-label">${task.label}</strong>
+        <span class="maintainer-task-status ${task.status}">${getTaskStatusLabel(task.status)}</span>
+      </article>`).join('')
+    : '<div class="maintainer-project-empty">Esta fase no tiene tareas visibles en el modelo actual.</div>';
+
+  detailNode.innerHTML = `
+    <div class="maintainer-phase-summary">
+      <div>
+        <h5>${activePhase.label}</h5>
+        <p>${safeProject.name || 'Nuevo proyecto'} · ${summary.total} tareas en la fase seleccionada.</p>
+      </div>
+      <div class="maintainer-actions">
+        <span class="maintainer-phase-pill">${summary.percent}% completado</span>
+        <span class="maintainer-phase-pill">${summary.completado} OK</span>
+        <span class="maintainer-phase-pill">${summary.pendiente} pendiente</span>
+        <span class="maintainer-phase-pill">${summary.bloqueado} bloqueada</span>
+      </div>
+    </div>
+    <div class="maintainer-task-list">${cards}</div>`;
+}
+
+function refreshMaintainerMasterDetail(project) {
+  const safeProject = sanitizeProject(project || { name: '', rag: 'verde', tasks: [] });
+  renderMaintainerProjectList();
+  renderMaintainerPhaseTabs(safeProject);
+  renderMaintainerPhaseDetail(safeProject);
 }
 
 function updateMetricsDisplay(metrics) {
@@ -1419,22 +1574,23 @@ function renderStageEditor() {
 }
 
 function writeForm(project) {
-  const p = sanitizeProject(project || { name: '', rag: 'verde' });
+  const p = sanitizeProject(project || { name: '', rag: 'verde', tasks: [] });
   maintainerController.setDraft(p);
   document.getElementById('mp-name').value = p.name || '';
   document.getElementById('mp-description').value = p.descripcion || '';
   document.getElementById('mp-responsable').value = p.responsable || '';
   document.getElementById('mp-rag').value = p.rag || 'verde';
-  STAGE_KEYS.forEach((key) => {
-    document.getElementById(`mp-${key}`).value = p[key] || 'pendiente';
-  });
+  refreshMaintainerMasterDetail(p);
 }
 
 function readForm() {
+  const draft = maintainerController.getState().draft || {};
   const project = {
+    ...draft,
     name: document.getElementById('mp-name').value,
     descripcion: document.getElementById('mp-description').value,
     responsable: document.getElementById('mp-responsable').value,
+    leader: document.getElementById('mp-responsable').value,
     rag: document.getElementById('mp-rag').value
   };
 
@@ -1476,6 +1632,8 @@ function refreshMaintainerSelect() {
     select.value = '-1';
     writeForm(snapshot.draft);
   }
+
+  renderMaintainerProjectList();
 }
 
 function saveLocalData(projects) {
@@ -1583,7 +1741,6 @@ async function loadData() {
 function openMaintainer(idx) {
   var panel = document.getElementById('maintainer-panel');
   if (panel) panel.classList.remove('hidden');
-  renderStageEditor();
   const desired = (typeof idx === 'number') ? idx : -1;
   try {
     const snapshot = desired >= 0
@@ -1643,7 +1800,13 @@ function setupMaintainerEvents() {
   const toggle = document.getElementById('maintainer-toggle');
   const panel = document.getElementById('maintainer-panel');
   if (toggle && panel) {
-    toggle.addEventListener('click', () => panel.classList.toggle('hidden'));
+    toggle.addEventListener('click', () => {
+      if (panel.classList.contains('hidden')) {
+        openMaintainer(selectedProjectIndex);
+        return;
+      }
+      panel.classList.add('hidden');
+    });
   }
 
   const mpClose = document.getElementById('mp-close');
@@ -1829,8 +1992,14 @@ function setupMaintainerEvents() {
     const node = document.getElementById(id);
     if (!node) return;
 
-    node.addEventListener('input', refreshDirtyState);
-    node.addEventListener('change', refreshDirtyState);
+    node.addEventListener('input', () => {
+      refreshMaintainerMasterDetail(readForm());
+      refreshDirtyState();
+    });
+    node.addEventListener('change', () => {
+      refreshMaintainerMasterDetail(readForm());
+      refreshDirtyState();
+    });
   });
 
   syncBaselineFromForm();

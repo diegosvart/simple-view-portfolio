@@ -12,6 +12,9 @@ test('root frontend entrypoint exists and includes maintainer anchors', () => {
   const html = fs.readFileSync(htmlPath, 'utf8');
 
   assert.ok(html.includes('id="maintainer-panel"'), 'maintainer panel anchor is required');
+  assert.ok(html.includes('id="maintainer-project-list"'), 'maintainer project list anchor is required');
+  assert.ok(html.includes('id="maintainer-phase-tabs"'), 'maintainer phase tabs anchor is required');
+  assert.ok(html.includes('id="maintainer-phase-detail"'), 'maintainer phase detail anchor is required');
   assert.ok(html.includes('id="maintainer-ux-state"'), 'maintainer UX state badge anchor is required');
   assert.ok(html.includes('id="mp-save"'), 'save button anchor is required');
   assert.ok(html.includes('id="proj-rows"'), 'project rows container is required');
@@ -38,6 +41,9 @@ test('app.js wires form sync functions: writeForm, readForm, refreshMaintainerSe
   assert.ok(js.includes('function writeForm('), 'writeForm must be a named standalone function');
   assert.ok(js.includes('function readForm('), 'readForm must be a named standalone function');
   assert.ok(js.includes('function refreshMaintainerSelect('), 'refreshMaintainerSelect must be a named standalone function');
+  assert.ok(js.includes('function renderMaintainerProjectList('), 'master-detail project list renderer must be present');
+  assert.ok(js.includes('function renderMaintainerPhaseTabs('), 'phase tabs renderer must be present');
+  assert.ok(js.includes('function renderMaintainerPhaseDetail('), 'phase detail renderer must be present');
   assert.ok(js.includes('startNewDraft({ system: true })'), 'internal refresh sync must use system selection bypass');
 });
 

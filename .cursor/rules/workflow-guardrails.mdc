@@ -1,0 +1,37 @@
+---
+description: Non-negotiable guardrails for branch, merge, and close-session safety.
+alwaysApply: true
+---
+
+# Workflow Guardrails
+
+## Trigger
+Apply on every coding/planning session before implementation and before session close.
+
+## Hard constraints
+- Never implement directly on `develop`.
+- Never skip `advance-after-pr-close` after PR merge.
+- Never finalize session memory from invalid state.
+- Never run `git init` in this cloned repository.
+
+## Required checks
+Run before coding:
+- `git rev-parse --is-inside-work-tree`
+- `git remote -v`
+- `git branch -a`
+- `git status -sb`
+
+Run workflow checks:
+- `./scripts/load-work-report.ps1`
+- `./scripts/validate-pre-implementation.ps1`
+
+## Blocking behavior
+- If current branch is not `develop` at bootstrap time, normalize with:
+`./scripts/load-work-report.ps1 -AutoNormalizeBaseBranch`
+- If tree is dirty and no explicit exception is approved, block implementation.
+- If close session is blocked, do not write memory until guardrails pass.
+
+## Exception controls
+- Diagnostics: `-DryRun`
+- Dirty tree exceptions: `-AllowDirty`, `-AllowDirtyNormalize`, `-AllowDirtyClose`
+- Every exception must be explicitly stated back to the user.

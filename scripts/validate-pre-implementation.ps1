@@ -2,11 +2,25 @@ param(
   [string]$BaseBranch = 'develop',
   [switch]$AllowDirty,
   [switch]$SkipGhAuth,
-  [switch]$DryRun
+  [switch]$DryRun,
+  [string]$ConfigFile = (Join-Path $PSScriptRoot 'workflow-config.json')
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+$configHelpersPath = Join-Path $PSScriptRoot 'workflow-config.ps1'
+if (Test-Path -LiteralPath $configHelpersPath) {
+  . $configHelpersPath
+}
+
+$workflowConfig = $null
+if (Get-Command -Name Get-WorkflowConfig -ErrorAction SilentlyContinue) {
+  $workflowConfig = Get-WorkflowConfig -ConfigFilePath $ConfigFile
+}
+if (-not $PSBoundParameters.ContainsKey('BaseBranch') -and $workflowConfig -and $workflowConfig.baseBranch) {
+  $BaseBranch = $workflowConfig.baseBranch
+}
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 

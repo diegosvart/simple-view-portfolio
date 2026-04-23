@@ -11,7 +11,7 @@ Este documento describe cómo transformamos requerimientos en issues del reposit
 
 ## Estado Actual de Automatizaciones
 
-- Implementadas en esta rama: `load-work-report.ps1`, `validate-pre-implementation.ps1`, `close-session.ps1`, `advance-after-pr-close.ps1`.
+- Implementadas en esta rama: `load-work-report.ps1`, `validate-pre-implementation.ps1`, `create-issue-from-context.ps1`, `create-pr.ps1`, `close-session.ps1`, `advance-after-pr-close.ps1`.
 - Si un script documentado no existe localmente, usar el fallback manual equivalente con `gh` y actualizar la documentación antes de continuar.
 
 ---
@@ -81,7 +81,7 @@ Antes de crear rama o editar codigo, ejecutar una validacion obligatoria de prec
 
 **Script**: `scripts/create-issue-from-context.ps1`
 
-**Estado en esta rama**: pendiente de implementación. Si no existe el script localmente, crear issue manual con `gh issue create` siguiendo la misma plantilla.
+**Estado en esta rama**: implementado. Fallback manual: `gh issue create` con la plantilla del workflow.
 
 **Entrada**: Contexto en lenguaje natural
 
@@ -125,7 +125,8 @@ Meta siguiente: Tarea de seguridad Git (bloquear comandos dañinos)
 ```
 
 Este orden se persiste en:
-- Scripts (ej. `IssueSequence` en `advance-after-pr-close.ps1`)
+- Config central (`scripts/workflow-config.json`, campo `issueSequence`)
+- Scripts (consumen `issueSequence` desde config)
 - Memoria del repositorio (`.github/scripts/`)
 - Documentación (este archivo)
 
@@ -172,7 +173,7 @@ git diff
 
 **Script**: `scripts/create-pr.ps1`
 
-**Estado en esta rama**: pendiente de implementación. Si no existe el script localmente, usar `git push` + `gh pr create` con `Closes #<numero>` en el body.
+**Estado en esta rama**: implementado. Fallback manual: `git push` + `gh pr create` con `Closes #<numero>` en el body.
 
 **Propósito**: Crear un PR consistente contra `develop` que auto-linkee el issue.
 

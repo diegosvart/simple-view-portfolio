@@ -1,0 +1,32 @@
+---
+description: Route architecture decisions to ADR Decision Architect before implementation.
+alwaysApply: true
+---
+
+# ADR Routing Policy
+
+## Trigger
+If the user request includes any of:
+- ADR
+- architecture
+- trade-offs
+- RFC
+- migration to React
+- technical feasibility
+- frontend design decisions
+
+## Required behavior
+1. Route to `ADR Decision Architect` analysis first.
+2. Produce:
+- decision statement
+- context and constraints
+- options considered
+- trade-off analysis
+- recommendation
+- risks/consequences
+- phased rollout plan
+3. Ask user validation of the chosen approach.
+4. Only after validation, move to implementation.
+
+## Failure behavior
+- If ADR analysis is skipped for architecture requests, stop implementation and return to decision phase.

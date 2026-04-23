@@ -239,7 +239,7 @@ git checkout -b feature/issue-8-contrato-planner
 |-----------|---------|--------|
 | `Priority` | P2 | create-issue-from-context |
 | `Base` | develop | create-pr |
-| `IssueSequence` | 3,4,5,6,8,10,9,7,13,12,14,11 | advance-after-pr-close |
+| `IssueSequence` | ver `scripts/workflow-config.json` | load-work-report / advance-after-pr-close / close-session |
 
 ---
 
@@ -295,9 +295,9 @@ git checkout -b feature/issue-8-contrato-planner
 
 ## Información Útil
 
-**Roadmap de issues**: 3, 4, 5, 6, 8, 10, 9, 7, 13, 12, 14, 11, 20
+**Roadmap de issues**: fuente única en `scripts/workflow-config.json` (`issueSequence`).
 
-**Siguiente tarea sugerida actual**: issue #8 (S2-I5 | Definir contrato futuro PlannerDataProvider sin Graph)
+**Siguiente tarea sugerida actual**: ejecutar `./scripts/load-work-report.ps1` para obtener sugerencia real en tiempo de ejecución.
 
 **Nueva tarea agregada**: Seguridad Git para prevenir comandos dañinos (incluye bloqueo operativo de `git init` en repos clonado y validaciones previas obligatorias)
 
@@ -318,6 +318,38 @@ git checkout -b feature/issue-8-contrato-planner
 **Issues**: https://github.com/diegosvart/simple-view-portfolio/issues
 
 **PRs**: https://github.com/diegosvart/simple-view-portfolio/pulls
+
+---
+
+## Uso desde Cursor
+
+Reglas activas en este repo:
+- `.cursor/rules/workflow-core.mdc`
+- `.cursor/rules/workflow-guardrails.mdc`
+- `.cursor/rules/workflow-routing-adr.mdc`
+- `.cursor/rules/workflow-automation-policy.mdc`
+
+Guia completa:
+- `docs/CURSOR_WORKFLOW.md`
+
+Comandos recomendados (config-driven):
+```powershell
+./scripts/load-work-report.ps1
+./scripts/validate-pre-implementation.ps1
+./scripts/create-issue-from-context.ps1 -Context "Descripcion"
+./scripts/create-pr.ps1 -IssueNumber <N> -CommitMessage "feat(#<N>): ..." -PrTitle "feat(#<N>): ..."
+./scripts/advance-after-pr-close.ps1 -PullNumber <PR_NUMBER>
+./scripts/close-session.ps1 -SessionSummary "Resumen corto"
+```
+
+Checklist de replicacion en nuevo repo:
+- [ ] Copiar `.cursor/rules/*.mdc`
+- [ ] Copiar `scripts/*.ps1` del workflow
+- [ ] Crear `scripts/workflow-config.json`
+- [ ] Validar `gh auth status`
+- [ ] Ejecutar fases 0 y 0.5
+- [ ] Validar fases 1 y 3 con `-DryRun`
+- [ ] Validar fase 5 post-merge y fase 6 de cierre
 
 ---
 
